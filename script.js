@@ -5,10 +5,10 @@ const API_KEY = parte1 + parte2;
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 
-// 🧠 MEMÓRIA DA IA: Aqui guardamos toda a conversa!
+// 🧠 MEMÓRIA DA IA
 let historico = [];
 
-// 📜 REGRAS DE COMPORTAMENTO DA IA:
+// 📜 REGRAS DE COMPORTAMENTO
 const regrasIA = "Você é uma IA especialista em Roblox e Minecraft. REGRAS IMPORTANTES: 1. Seja amigável e converse naturalmente. 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um código ou script. Se ele disser 'Oi', apenas cumprimente e pergunte como pode ajudar. 3. Para scripts de Roblox, saiba que o usuário pode querer códigos para o Roblox Studio ou para executores como o Delta. Adapte-se ao que ele pedir e crie scripts compatíveis.";
 
 async function enviarMensagem() {
@@ -18,21 +18,21 @@ async function enviarMensagem() {
     adicionarMensagem(textoUsuario, "user-message");
     userInput.value = "";
 
-    // 1. Salva o que VOCÊ disse na memória
+    // Salva o que VOCÊ disse na memória
     historico.push({ role: "user", parts: [{ text: textoUsuario }] });
 
     const loadingId = adicionarMensagem("Pensando...", "ai-message");
     
     try {
-        // Usando a versão mais estável e inteligente (1.5-flash) com suporte a regras e memória
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        // CORRIGIDO: Voltando para a versão 3.6-flash que funciona com a sua chave!
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                systemInstruction: { parts: [{ text: regrasIA }] }, // Injeta as regras
-                contents: historico // Envia a memória inteira!
+                systemInstruction: { parts: [{ text: regrasIA }] }, 
+                contents: historico 
             })
         });
 
@@ -43,7 +43,7 @@ async function enviarMensagem() {
         if (dados.candidates && dados.candidates.length > 0) {
             const textoIA = dados.candidates[0].content.parts[0].text;
             
-            // 2. Salva o que a IA respondeu na memória para ela lembrar depois
+            // Salva o que a IA respondeu na memória
             historico.push({ role: "model", parts: [{ text: textoIA }] }); 
             
             adicionarMensagem(textoIA, "ai-message");
@@ -67,22 +67,21 @@ function adicionarMensagem(texto, classe) {
         if (typeof marked !== "undefined") {
             div.innerHTML = marked.parse(texto);
             
-            // 📋 MÁGICA DO BOTÃO DE COPIAR!
-            const blocosDeCodigo = div.querySelectorAll("pre"); // Acha todas as caixas de código
+            // MÁGICA DO BOTÃO DE COPIAR
+            const blocosDeCodigo = div.querySelectorAll("pre"); 
             blocosDeCodigo.forEach((bloco) => {
                 const botaoCopiar = document.createElement("button");
                 botaoCopiar.className = "copy-btn";
                 botaoCopiar.innerHTML = "📋 Copiar";
                 
-                // O que acontece quando você clica em Copiar:
                 botaoCopiar.onclick = function() {
                     const codigo = bloco.querySelector("code").innerText;
-                    navigator.clipboard.writeText(codigo); // Copia pro seu celular
-                    botaoCopiar.innerHTML = "✅ Copiado!"; // Muda o texto
-                    setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); // Volta ao normal depois de 2 seg
+                    navigator.clipboard.writeText(codigo); 
+                    botaoCopiar.innerHTML = "✅ Copiado!"; 
+                    setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); 
                 };
                 
-                bloco.appendChild(botaoCopiar); // Coloca o botão dentro da caixa preta
+                bloco.appendChild(botaoCopiar); 
             });
 
         } else {
