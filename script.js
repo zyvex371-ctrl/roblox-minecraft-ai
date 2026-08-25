@@ -59,7 +59,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! Novo chat iniciado com o Gemini 3.6 Flash. O que vamos programar hoje?
+            Olá! Novo chat iniciado. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
@@ -179,7 +179,6 @@ async function enviarMensagem() {
     });
 
     try {
-        // CORRIGIDO PARA O MODELO RECOMENDADO PELO GOOGLE: gemini-3.6-flash
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
