@@ -46,16 +46,16 @@ header p {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px; 
 }
 
 .message {
-    padding: 10px 15px;
+    padding: 15px;
     border-radius: 15px;
-    max-width: 85%;
+    max-width: 90%; 
     word-wrap: break-word;
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 .user-message {
@@ -70,6 +70,48 @@ header p {
     color: #ffffff;
     align-self: flex-start;
     border-bottom-left-radius: 2px;
+}
+
+/* --- ESTILOS NOVOS PARA O TEXTO E CÓDIGO FICAREM BONITOS --- */
+.ai-message p {
+    margin-bottom: 10px;
+}
+
+.ai-message h1, .ai-message h2, .ai-message h3 {
+    margin: 15px 0 10px 0;
+    color: #00ff88;
+}
+
+.ai-message ul, .ai-message ol {
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+
+/* Caixinha preta bonita para os códigos de programação */
+.ai-message pre {
+    background-color: #000000;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+    border: 1px solid #444;
+}
+
+/* Deixa as palavras normais em verde se estiverem entre `crases` */
+.ai-message code {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #111;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #00ff88; 
+    font-size: 0.9rem;
+}
+
+/* Deixa o código gigante da caixinha com cores originais */
+.ai-message pre code {
+    background-color: transparent;
+    padding: 0;
+    color: #f8f8f2;
 }
 
 .input-area {
