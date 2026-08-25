@@ -6,14 +6,17 @@ const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 
 let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum histórico anterior.";
+// Memória personalizada salva pelo usuário no Cérebro da IA
+let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
 const atualizarRegras = () => {
     return `Você é uma IA sênior especialista em criar sistemas inteiros, gigantes, modulares e COMPLETOS para Roblox (Roblox Studio / Luau) e para executores como Delta, além de mods para Minecraft. 
 REGRAS OBRIGATÓRIAS:
 1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios do tipo '-- coloque seu código aqui' ou reticências (...).
 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-3. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES COM ESTE USUÁRIO: ${globalMemory}
-4. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
+3. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO (Obrigatório seguir sempre): ${customMemory}
+4. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
+5. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
 };
 
 let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
@@ -57,11 +60,24 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! Novo chat iniciado com o cérebro conectado à memória global. O que vamos programar hoje para o Roblox (Studio ou Delta) ou Minecraft?
+            Olá! Novo chat iniciado. O cérebro da IA está ativo com suas memórias personalizadas. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
     fecharMenu();
+}
+
+// FUNÇÃO PARA EDITAR O CÉREBRO DA IA MANUALMENTE
+function configurarCerebro() {
+    fecharMenu();
+    const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
+    const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA (Ex: 'Lembre-se que meu nome é Gabriel e sou seu dono'):", promptAtual);
+    
+    if (novaInstrucao !== null) {
+        customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
+        localStorage.setItem('codecraft_custom_memory', customMemory);
+        alert("✅ Cérebro atualizado com sucesso! A IA agora se lembrará disso em todas as conversas.");
+    }
 }
 
 function renomearChat(event, id) {
@@ -165,7 +181,6 @@ async function enviarMensagem() {
         });
     });
 
-    // SISTEMA DE TENTATIVA AUTOMÁTICA (AUTO-RETRY)
     let sucesso = false;
     let tentativas = 0;
     let dados = null;
@@ -188,11 +203,10 @@ async function enviarMensagem() {
 
             dados = await resposta.json();
 
-            // Se bater no limite de taxa do Google (Quota exceeded / 429)
             if (dados.error && (dados.error.code === 429 || JSON.stringify(dados.error).includes('Quota exceeded'))) {
                 if (tentativas < 3) {
-                    loadingElement.innerHTML = `⏳ O Google pediu para aguardar um instante devido ao limite gratuito. Tentando de novo automaticamente em 15 segundos... (Tentativa ${tentativas}/3)`;
-                    await new Promise(resolve => setTimeout(resolve, 15000)); // Espera 15 seg
+                    loadingElement.innerHTML = `⏳ O Google pediu para aguardar devido ao limite gratuito. Tentando de novo automaticamente em 15 segundos... (Tentativa ${tentativas}/3)`;
+                    await new Promise(resolve => setTimeout(resolve, 15000));
                     loadingElement.innerHTML = "Pensando...";
                     continue;
                 }
