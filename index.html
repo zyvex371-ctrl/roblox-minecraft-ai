@@ -39,9 +39,13 @@
             </div>
         </div>
 
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Digite sua dúvida ou peça um sistema..." onkeypress="observarEnter(event)">
-            <button onclick="enviarMensagem()">Enviar</button>
+        <!-- BARRA DE FALA ESTILO CHATGPT -->
+        <div class="input-container-wrapper">
+            <div class="input-area">
+                <button class="plus-btn" title="Mais opções">+</button>
+                <input type="text" id="user-input" placeholder="Perguntar ao CodeCraft..." onkeypress="observarEnter(event)">
+                <button class="send-btn" onclick="enviarMensagem()">➤</button>
+            </div>
         </div>
     </div>
 
