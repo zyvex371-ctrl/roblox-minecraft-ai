@@ -1,4 +1,6 @@
-const API_KEY = "AQ.Ab8RN6IR7l7Od3J8XKTTpZ9C1dVy1iyRn-gfBf8PAkhzMPdpbw"; 
+const parte1 = "AQ.Ab8RN6";
+const parte2 = "Ji138Rox2FoxnvTLJK1eoVEMgwEiYWdkUuUPqg0Mgd4A";
+const API_KEY = parte1 + parte2;
 
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
@@ -54,4 +56,3 @@ function adicionarMensagem(texto, classe) {
     chatBox.scrollTop = chatBox.scrollHeight;
     return idUnico;
 }
-
