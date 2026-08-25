@@ -17,8 +17,7 @@ async function enviarMensagem() {
     const systemPrompt = "Você é uma IA sênior especialista em scripts para Roblox (Luau) e criação de mods para Minecraft. Forneça códigos prontos, limpos e explique como usar. O usuário perguntou: ";
     
     try {
-        // Atualizado para o modelo Gemini 3.6 Flash recomendado pelo Google
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+        const resposta = await fetch(`[https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=$){API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -52,7 +51,14 @@ async function enviarMensagem() {
 function adicionarMensagem(texto, classe) {
     const div = document.createElement("div");
     div.className = `message ${classe}`;
-    div.innerHTML = texto.replace(/\n/g, '<br>'); 
+    
+    // A MÁGICA: Se for a IA respondendo, usa o tradutor 'marked' para deixar o código bonito!
+    if (classe === "ai-message" && texto !== "Pensando no código..." && !texto.startsWith("❌")) {
+        div.innerHTML = marked.parse(texto);
+    } else {
+        div.innerHTML = texto.replace(/\n/g, '<br>'); 
+    }
+    
     const idUnico = "msg-" + Date.now();
     div.id = idUnico;
     chatBox.appendChild(div);
