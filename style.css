@@ -58,6 +58,24 @@ html, body {
     text-align: center;
 }
 
+/* ESTILO DO BOTÃO DO CÉREBRO */
+.brain-btn {
+    background-color: #333;
+    color: #00ff88;
+    border: 1px solid #00ff88;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.brain-btn:hover {
+    background-color: #00ff88;
+    color: #000;
+}
+
 .history-list {
     flex: 1;
     overflow-y: auto;
@@ -67,7 +85,6 @@ html, body {
     gap: 8px;
 }
 
-/* ESTILO DOS ITENS DO HISTÓRICO */
 .history-item {
     background-color: #252525;
     padding: 10px;
@@ -86,7 +103,6 @@ html, body {
     background-color: #2e2e2e;
 }
 
-/* CHAT ATUAL FICA COM DESTAQUE VERDE */
 .history-item.active {
     background-color: #1a3324;
     border-color: #00ff88;
