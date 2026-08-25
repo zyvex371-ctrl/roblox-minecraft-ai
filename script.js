@@ -5,6 +5,12 @@ const API_KEY = parte1 + parte2;
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 
+// 🧠 MEMÓRIA DA IA: Aqui guardamos toda a conversa!
+let historico = [];
+
+// 📜 REGRAS DE COMPORTAMENTO DA IA:
+const regrasIA = "Você é uma IA especialista em Roblox e Minecraft. REGRAS IMPORTANTES: 1. Seja amigável e converse naturalmente. 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um código ou script. Se ele disser 'Oi', apenas cumprimente e pergunte como pode ajudar. 3. Para scripts de Roblox, saiba que o usuário pode querer códigos para o Roblox Studio ou para executores como o Delta. Adapte-se ao que ele pedir e crie scripts compatíveis.";
+
 async function enviarMensagem() {
     const textoUsuario = userInput.value.trim();
     if (textoUsuario === "") return;
@@ -12,20 +18,21 @@ async function enviarMensagem() {
     adicionarMensagem(textoUsuario, "user-message");
     userInput.value = "";
 
-    const loadingId = adicionarMensagem("Pensando no código...", "ai-message");
+    // 1. Salva o que VOCÊ disse na memória
+    historico.push({ role: "user", parts: [{ text: textoUsuario }] });
 
-    const systemPrompt = "Você é uma IA sênior especialista em scripts para Roblox (Luau) e criação de mods para Minecraft. Forneça códigos prontos, limpos e explique como usar. O usuário perguntou: ";
+    const loadingId = adicionarMensagem("Pensando...", "ai-message");
     
     try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+        // Usando a versão mais estável e inteligente (1.5-flash) com suporte a regras e memória
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: systemPrompt + textoUsuario }]
-                }]
+                systemInstruction: { parts: [{ text: regrasIA }] }, // Injeta as regras
+                contents: historico // Envia a memória inteira!
             })
         });
 
@@ -35,6 +42,10 @@ async function enviarMensagem() {
 
         if (dados.candidates && dados.candidates.length > 0) {
             const textoIA = dados.candidates[0].content.parts[0].text;
+            
+            // 2. Salva o que a IA respondeu na memória para ela lembrar depois
+            historico.push({ role: "model", parts: [{ text: textoIA }] }); 
+            
             adicionarMensagem(textoIA, "ai-message");
         } else if (dados.error) {
             adicionarMensagem("❌ Erro do Google: " + dados.error.message, "ai-message");
@@ -44,7 +55,6 @@ async function enviarMensagem() {
 
     } catch (erro) {
         document.getElementById(loadingId).remove();
-        // Agora ele mostra o erro verdadeiro na tela se algo der pau!
         adicionarMensagem("❌ Erro no código: " + erro.message, "ai-message");
     }
 }
@@ -53,14 +63,30 @@ function adicionarMensagem(texto, classe) {
     const div = document.createElement("div");
     div.className = `message ${classe}`;
     
-    // O ESCUDO ANTI-CRASH:
-    if (classe === "ai-message" && texto !== "Pensando no código..." && !texto.startsWith("❌")) {
-        // Verifica se a ferramenta 'marked' carregou no index.html
+    if (classe === "ai-message" && texto !== "Pensando..." && !texto.startsWith("❌")) {
         if (typeof marked !== "undefined") {
             div.innerHTML = marked.parse(texto);
+            
+            // 📋 MÁGICA DO BOTÃO DE COPIAR!
+            const blocosDeCodigo = div.querySelectorAll("pre"); // Acha todas as caixas de código
+            blocosDeCodigo.forEach((bloco) => {
+                const botaoCopiar = document.createElement("button");
+                botaoCopiar.className = "copy-btn";
+                botaoCopiar.innerHTML = "📋 Copiar";
+                
+                // O que acontece quando você clica em Copiar:
+                botaoCopiar.onclick = function() {
+                    const codigo = bloco.querySelector("code").innerText;
+                    navigator.clipboard.writeText(codigo); // Copia pro seu celular
+                    botaoCopiar.innerHTML = "✅ Copiado!"; // Muda o texto
+                    setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); // Volta ao normal depois de 2 seg
+                };
+                
+                bloco.appendChild(botaoCopiar); // Coloca o botão dentro da caixa preta
+            });
+
         } else {
-            // Se falhar, mostra o texto feio mesmo, mas NÃO CRASHA o site!
-            div.innerHTML = texto.replace(/\n/g, '<br>') + "<br><br><small style='color:red;'>Aviso: Falha ao carregar o visual bonito. Verifique se salvou o index.html novo!</small>"; 
+            div.innerHTML = texto.replace(/\n/g, '<br>'); 
         }
     } else {
         div.innerHTML = texto.replace(/\n/g, '<br>'); 
