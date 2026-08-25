@@ -241,7 +241,7 @@ code {
 .input-container {
     display: flex;
     align-items: flex-end;
-    padding: 10px 15px;
+    padding: 12px 15px 22px 15px; /* <--- Ajustado aqui para empurrar a barra um pouco mais para cima */
     background-color: #1a1a1a;
     border-top: 1px solid #333;
     gap: 10px;
