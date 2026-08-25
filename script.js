@@ -59,7 +59,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! Nova chave de API conectada com sucesso. O que vamos programar hoje?
+            Olá! Sistema otimizado com o Gemini Flash-Lite. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
@@ -179,7 +179,8 @@ async function enviarMensagem() {
     });
 
     try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+        // USANDO O MODELO FLASH-LITE QUE É MAIS LEVE E PERMITE MAIS REQUISIÇÕES NO PLANO GRATUITO
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash-lite:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
