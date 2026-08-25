@@ -9,13 +9,14 @@ let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum hi
 let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
 const atualizarRegras = () => {
-    return `Você é uma IA sênior especialista em criar sistemas inteiros, gigantes, modulares e COMPLETOS para Roblox (Roblox Studio / Luau) e para executores como Delta, além de mods para Minecraft. 
+    return `Você é uma IA sênior especialista em criar sistemas inteiros, gigantes, modulares e COMPLETOS para Roblox (Roblox Studio / Luau) focados em EXECUTORES MOBILE (como o Delta), além de mods para Minecraft. 
 REGRAS OBRIGATÓRIAS:
-1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios do tipo '-- coloque seu código aqui' ou reticências (...).
+1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios ou reticências (...).
 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-3. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO: ${customMemory}
-4. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
-5. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
+3. FOCO ABSOLUTO EM MOBILE / DELTA: Todos os scripts em Luau gerados devem ser totalmente compatíveis e otimizados para rodar no Delta em celulares. Evite funções pesadas de PC, loops agressivos no RenderStepped, manipulações perigosas de CoreGUI e bibliotecas de desenho externas que façam o jogo fechar. Prefira UIs limpas com ScreenGui nativo e códigos leves.
+4. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO: ${customMemory}
+5. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
+6. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
 };
 
 let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
@@ -59,7 +60,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! Sistema otimizado com o Gemini Flash-Lite. O que vamos programar hoje?
+            Olá! CodeCraft otimizado para o Delta Mobile. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
@@ -179,7 +180,6 @@ async function enviarMensagem() {
     });
 
     try {
-        // USANDO O MODELO FLASH-LITE QUE É MAIS LEVE E PERMITE MAIS REQUISIÇÕES NO PLANO GRATUITO
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash-lite:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
