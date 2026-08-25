@@ -14,7 +14,7 @@ const atualizarRegras = () => {
 PROCESSO OBRIGATÓRIO DE PENSAMENTO (Pense estrategicamente antes de gerar o código):
 1. ANÁLISE DE SEGURANÇA E SERVIDOR: Antes de escrever qualquer script, analise barreiras de autoridade de servidor, anti-cheats básicos ou grupos de colisão do jogo.
 2. ENGENHARIA DEFENSIVA RIGOROSA: Nunca assuma que objetos, partes do avatar ou serviços existem. Todo script deve obrigatoriamente usar verificações de nulidade defensivas (ex: 'if character and humanoid then') e blocos 'pcall()' para evitar que erros quebrem o executor no celular.
-3. OTIMIZAÇÃO MOBILE: Em loops contínuos (como RunService.Stepped), garanta varreduras leves, condicionais inteligentes (ex: verificar se `v.CanCollide` é verdadeiro antes de alterar) e otimizadas para não causar travamentos ou queda de FPS.
+3. OTIMIZAÇÃO MOBILE: Em loops contínuos (como RunService.Stepped), garanta varreduras leves, condicionais inteligentes (ex: verificar se v.CanCollide é verdadeiro antes de alterar) e otimizadas para não causar travamentos ou queda de FPS.
 4. PADRÃO DE QUALIDADE: Forneça o código inteiro, robusto, funcional, limpo e estruturado do início ao fim, sem usar atalhos ou reticências (...).
 
 REGRAS GERAIS:
@@ -24,28 +24,43 @@ REGRAS GERAIS:
 8. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
 };
 
-let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+let sessoes = [];
+try {
+    sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+} catch (e) {
+    sessoes = [];
+}
+
 let chatAtualId = localStorage.getItem('codecraft_atual_id') || null;
 
 window.onload = function() {
-    carregarListaChats();
-    if (sessoes.length === 0) {
-        novoChat();
-    } else if (chatAtualId) {
-        carregarChat(chatAtualId);
-    } else {
+    try {
+        carregarListaChats();
+        if (sessoes.length === 0) {
+            novoChat();
+        } else if (chatAtualId) {
+            carregarChat(chatAtualId);
+        } else {
+            novoChat();
+        }
+    } catch (err) {
+        console.error("Erro ao iniciar:", err);
         novoChat();
     }
 };
 
 function abrirMenu() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('overlay').classList.add('active');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    if (sidebar) sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('active');
 }
 
 function fecharMenu() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('active');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
 }
 
 function novoChat() {
@@ -59,11 +74,13 @@ function novoChat() {
     chatAtualId = novoId;
     salvarDados();
     
-    chatBox.innerHTML = `
-        <div class="message ai-message">
-            Olá, Heitor! CodeCraft atualizado com raciocínio defensivo para o Delta Mobile. O que vamos programar hoje?
-        </div>
-    `;
+    if (chatBox) {
+        chatBox.innerHTML = `
+            <div class="message ai-message">
+                Olá, Heitor! CodeCraft pronto para o Delta Mobile. O que vamos programar hoje?
+            </div>
+        `;
+    }
     carregarListaChats();
     fecharMenu();
 }
@@ -94,16 +111,20 @@ function renomearChat(event, id) {
 }
 
 function salvarDados() {
-    localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
-    localStorage.setItem('codecraft_atual_id', chatAtualId);
-    
-    let resumo = sessoes.map(s => `[Chat: ${s.titulo}]`).join(' | ');
-    globalMemory = resumo;
-    localStorage.setItem('codecraft_global_memory', globalMemory);
+    try {
+        localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
+        localStorage.setItem('codecraft_atual_id', chatAtualId);
+        let resumo = sessoes.map(s => `[Chat: ${s.titulo}]`).join(' | ');
+        globalMemory = resumo;
+        localStorage.setItem('codecraft_global_memory', globalMemory);
+    } catch (e) {
+        console.error("Erro ao salvar dados:", e);
+    }
 }
 
 function carregarListaChats() {
     const listDiv = document.getElementById('history-list');
+    if (!listDiv) return;
     listDiv.innerHTML = '';
     
     sessoes.forEach(sessao => {
@@ -136,14 +157,16 @@ function carregarChat(id) {
     const sessao = sessoes.find(s => s.id === id);
     if (!sessao) return;
     
-    chatBox.innerHTML = '';
+    if (chatBox) chatBox.innerHTML = '';
     
     if (sessao.mensagens.length === 0) {
-        chatBox.innerHTML = `
-            <div class="message ai-message">
-                Chat carregado. Como posso ajudar com seus scripts?
-            </div>
-        `;
+        if (chatBox) {
+            chatBox.innerHTML = `
+                <div class="message ai-message">
+                    Chat carregado. Como posso ajudar com seus scripts?
+                </div>
+            `;
+        }
     } else {
         sessao.mensagens.forEach(msg => {
             renderizarMensagemNaTelaInstantanea(msg.texto, msg.classe);
@@ -153,6 +176,7 @@ function carregarChat(id) {
 }
 
 async function enviarMensagem() {
+    if (!userInput) return;
     const textoUsuario = userInput.value.trim();
     if (textoUsuario === "") return;
 
@@ -181,7 +205,7 @@ async function enviarMensagem() {
     });
 
     try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash-lite:generateContent?key=${API_KEY}`, {
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -195,7 +219,8 @@ async function enviarMensagem() {
         });
 
         const dados = await resposta.json();
-        document.getElementById(loadingId).remove();
+        const loadEl = document.getElementById(loadingId);
+        if (loadEl) loadEl.remove();
 
         if (dados.candidates && dados.candidates.length > 0) {
             const textoIA = dados.candidates[0].content.parts[0].text;
@@ -211,7 +236,8 @@ async function enviarMensagem() {
         }
 
     } catch (erro) {
-        document.getElementById(loadingId).remove();
+        const loadEl = document.getElementById(loadingId);
+        if (loadEl) loadEl.remove();
         renderizarMensagemNaTelaInstantanea("❌ Erro de conexão: " + erro.message, "ai-message");
     }
 }
@@ -222,8 +248,10 @@ function adicionarMensagemGenerica(texto, classe) {
     div.innerHTML = texto.replace(/\n/g, '<br>');
     const idUnico = "msg-" + Date.now();
     div.id = idUnico;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    if (chatBox) {
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
     return idUnico;
 }
 
@@ -242,14 +270,18 @@ function renderizarMensagemNaTelaInstantanea(texto, classe) {
         div.innerHTML = texto.replace(/\n/g, '<br>'); 
     }
     
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    if (chatBox) {
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 }
 
 async function renderizarComEfeitoDigitacao(textoCompleto) {
     const div = document.createElement("div");
     div.className = "message ai-message";
-    chatBox.appendChild(div);
+    if (chatBox) {
+        chatBox.appendChild(div);
+    }
 
     let i = 0;
     const velocidade = 6; 
@@ -259,7 +291,7 @@ async function renderizarComEfeitoDigitacao(textoCompleto) {
             if (i < textoCompleto.length) {
                 div.textContent += textoCompleto.substring(i, i + 4);
                 i += 4;
-                chatBox.scrollTop = chatBox.scrollHeight;
+                if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
             } else {
                 clearInterval(timer);
                 if (typeof marked !== "undefined") {
@@ -268,7 +300,7 @@ async function renderizarComEfeitoDigitacao(textoCompleto) {
                 } else {
                     div.innerHTML = textoCompleto.replace(/\n/g, '<br>');
                 }
-                chatBox.scrollTop = chatBox.scrollHeight;
+                if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
                 resolve();
             }
         }, velocidade);
@@ -278,6 +310,7 @@ async function renderizarComEfeitoDigitacao(textoCompleto) {
 function adicionarBotoesCopiar(containerDiv) {
     const blocosDeCodigo = containerDiv.querySelectorAll("pre"); 
     blocosDeCodigo.forEach((bloco) => {
+        if (bloco.querySelector(".copy-btn")) return;
         const botaoCopiar = document.createElement("button");
         botaoCopiar.className = "copy-btn";
         botaoCopiar.innerHTML = "📋 Copiar";
