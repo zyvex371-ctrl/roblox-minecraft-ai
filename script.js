@@ -59,7 +59,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! Novo chat iniciado. O cérebro da IA está ativo com suas memórias personalizadas. O que vamos programar hoje?
+            Olá! Novo chat iniciado com o Gemini 2.0 Flash. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
@@ -74,7 +74,7 @@ function configurarCerebro() {
     if (novaInstrucao !== null) {
         customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
         localStorage.setItem('codecraft_custom_memory', customMemory);
-        alert("✅ Cérebro atualizado com sucesso! A IA agora se lembrará disso em todas as conversas.");
+        alert("✅ Cérebro atualizado com sucesso!");
     }
 }
 
@@ -179,7 +179,8 @@ async function enviarMensagem() {
     });
 
     try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+        // CORRIGIDO: Usando gemini-2.0-flash que possui cota livre estável e sem bloqueio imediato
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
