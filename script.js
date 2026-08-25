@@ -5,16 +5,14 @@ const API_KEY = parte1 + parte2;
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 
-// Memória global entre conversas armazenada no navegador
 let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum histórico anterior.";
 
-// Regras avançadas com limite máximo de tokens para códigos gigantes e completos
 const atualizarRegras = () => {
     return `Você é uma IA sênior especialista em criar sistemas inteiros, gigantes, modulares e COMPLETOS para Roblox (Roblox Studio / Luau) e para executores como Delta, além de mods para Minecraft. 
 REGRAS OBRIGATÓRIAS:
 1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios do tipo '-- coloque seu código aqui' ou reticências (...).
 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-3. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES COM ESTE USUÁRIO (Lembre-se destes tópicos para manter o contexto entre chats diferentes): ${globalMemory}
+3. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES COM ESTE USUÁRIO: ${globalMemory}
 4. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
 };
 
@@ -66,11 +64,24 @@ function novoChat() {
     fecharMenu();
 }
 
+// FUNÇÃO PARA RENOMEAR O CHAT
+function renomearChat(event, id) {
+    event.stopPropagation(); // Evita abrir o chat ao clicar no lápis
+    const sessao = sessoes.find(s => s.id === id);
+    if (!sessao) return;
+
+    const novoNome = prompt("Digite o novo nome para este chat:", sessao.titulo);
+    if (novoNome && novoNome.trim() !== "") {
+        sessao.titulo = novoNome.trim();
+        salvarDados();
+        carregarListaChats();
+    }
+}
+
 function salvarDados() {
     localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
     localStorage.setItem('codecraft_atual_id', chatAtualId);
     
-    // Atualiza a memória global resumindo os chats salvos
     let resumo = sessoes.map(s => `[Chat: ${s.titulo}]`).join(' | ');
     globalMemory = resumo;
     localStorage.setItem('codecraft_global_memory', globalMemory);
@@ -82,9 +93,27 @@ function carregarListaChats() {
     
     sessoes.forEach(sessao => {
         const item = document.createElement('div');
+        // Adiciona a classe 'active' se for o chat atual (ficará verde)
         item.className = `history-item ${sessao.id === chatAtualId ? 'active' : ''}`;
-        item.innerText = sessao.titulo;
+        
+        // Texto do chat
+        const spanTexto = document.createElement('span');
+        spanTexto.className = 'history-text';
+        spanTexto.innerText = sessao.titulo;
+        
+        // Botão de renomear (✏️)
+        const btnRenomear = document.createElement('button');
+        btnRenomear.className = 'rename-btn';
+        btnRenomear.innerHTML = '✏️';
+        btnRenomear.title = 'Renomear chat';
+        btnRenomear.onclick = (e) => renomearChat(e, sessao.id);
+
+        item.appendChild(spanTexto);
+        item.appendChild(btnRenomear);
+
+        // Clicar no item carrega o chat
         item.onclick = () => carregarChat(sessao.id);
+        
         listDiv.appendChild(item);
     });
 }
@@ -123,15 +152,14 @@ async function enviarMensagem() {
     const sessao = sessoes.find(s => s.id === chatAtualId);
     if (!sessao) return;
 
-    if (sessao.mensagens.length === 0) {
-        sessao.titulo = textoUsuario.substring(0, 25) + (textoUsuario.length > 25 ? '...' : '');
+    if (sessao.mensagens.length === 0 && sessao.titulo === 'Novo Chat') {
+        sessao.titulo = textoUsuario.substring(0, 22) + (textoUsuario.length > 22 ? '...' : '');
         carregarListaChats();
     }
 
     sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
     salvarDados();
 
-    // Bolha de carregamento
     const loadingId = adicionarMensagemGenerica("Pensando...", "ai-message");
 
     let historicoFormatado = [];
@@ -150,7 +178,7 @@ async function enviarMensagem() {
                 systemInstruction: { parts: [{ text: atualizarRegras() }] },
                 contents: historicoFormatado,
                 generationConfig: {
-                    maxOutputTokens: 8192, // Capacidade máxima liberada para códigos gigantes
+                    maxOutputTokens: 8192,
                     temperature: 0.7
                 }
             })
@@ -164,7 +192,6 @@ async function enviarMensagem() {
             sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
             salvarDados();
             
-            // Efeito de digitação estilo ChatGPT!
             await renderizarComEfeitoDigitacao(textoIA);
 
         } else if (dados.error) {
@@ -209,26 +236,22 @@ function renderizarMensagemNaTelaInstantanea(texto, classe) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// EFEITO DE DIGITAÇÃO ESTILO CHATGPT
 async function renderizarComEfeitoDigitacao(textoCompleto) {
     const div = document.createElement("div");
     div.className = "message ai-message";
     chatBox.appendChild(div);
 
     let i = 0;
-    // Velocidade de digitação fluida
     const velocidade = 6; 
     
     return new Promise((resolve) => {
         const timer = setInterval(() => {
             if (i < textoCompleto.length) {
-                // Exibe em blocos curtos para agilizar a digitação de textos grandes
                 div.textContent += textoCompleto.substring(i, i + 4);
                 i += 4;
                 chatBox.scrollTop = chatBox.scrollHeight;
             } else {
                 clearInterval(timer);
-                // Quando termina de digitar, converte perfeitamente para Markdown formatado com caixas de código e botão copiar
                 if (typeof marked !== "undefined") {
                     div.innerHTML = marked.parse(textoCompleto);
                     adicionarBotoesCopiar(div);
