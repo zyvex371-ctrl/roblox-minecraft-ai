@@ -64,9 +64,8 @@ function novoChat() {
     fecharMenu();
 }
 
-// FUNÇÃO PARA RENOMEAR O CHAT
 function renomearChat(event, id) {
-    event.stopPropagation(); // Evita abrir o chat ao clicar no lápis
+    event.stopPropagation();
     const sessao = sessoes.find(s => s.id === id);
     if (!sessao) return;
 
@@ -93,15 +92,12 @@ function carregarListaChats() {
     
     sessoes.forEach(sessao => {
         const item = document.createElement('div');
-        // Adiciona a classe 'active' se for o chat atual (ficará verde)
         item.className = `history-item ${sessao.id === chatAtualId ? 'active' : ''}`;
         
-        // Texto do chat
         const spanTexto = document.createElement('span');
         spanTexto.className = 'history-text';
         spanTexto.innerText = sessao.titulo;
         
-        // Botão de renomear (✏️)
         const btnRenomear = document.createElement('button');
         btnRenomear.className = 'rename-btn';
         btnRenomear.innerHTML = '✏️';
@@ -110,8 +106,6 @@ function carregarListaChats() {
 
         item.appendChild(spanTexto);
         item.appendChild(btnRenomear);
-
-        // Clicar no item carrega o chat
         item.onclick = () => carregarChat(sessao.id);
         
         listDiv.appendChild(item);
@@ -160,7 +154,8 @@ async function enviarMensagem() {
     sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
     salvarDados();
 
-    const loadingId = adicionarMensagemGenerica("Pensando...", "ai-message");
+    const loadingDivId = adicionarMensagemGenerica("Pensando...", "ai-message");
+    const loadingElement = document.getElementById(loadingDivId);
 
     let historicoFormatado = [];
     sessao.mensagens.forEach(m => {
@@ -170,39 +165,64 @@ async function enviarMensagem() {
         });
     });
 
-    try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                systemInstruction: { parts: [{ text: atualizarRegras() }] },
-                contents: historicoFormatado,
-                generationConfig: {
-                    maxOutputTokens: 8192,
-                    temperature: 0.7
+    // SISTEMA DE TENTATIVA AUTOMÁTICA (AUTO-RETRY)
+    let sucesso = false;
+    let tentativas = 0;
+    let dados = null;
+
+    while (!sucesso && tentativas < 3) {
+        try {
+            tentativas++;
+            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    systemInstruction: { parts: [{ text: atualizarRegras() }] },
+                    contents: historicoFormatado,
+                    generationConfig: {
+                        maxOutputTokens: 8192,
+                        temperature: 0.7
+                    }
+                })
+            });
+
+            dados = await resposta.json();
+
+            // Se bater no limite de taxa do Google (Quota exceeded / 429)
+            if (dados.error && (dados.error.code === 429 || JSON.stringify(dados.error).includes('Quota exceeded'))) {
+                if (tentativas < 3) {
+                    loadingElement.innerHTML = `⏳ O Google pediu para aguardar um instante devido ao limite gratuito. Tentando de novo automaticamente em 15 segundos... (Tentativa ${tentativas}/3)`;
+                    await new Promise(resolve => setTimeout(resolve, 15000)); // Espera 15 seg
+                    loadingElement.innerHTML = "Pensando...";
+                    continue;
                 }
-            })
-        });
+            }
 
-        const dados = await resposta.json();
-        document.getElementById(loadingId).remove();
-
-        if (dados.candidates && dados.candidates.length > 0) {
-            const textoIA = dados.candidates[0].content.parts[0].text;
-            sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
-            salvarDados();
-            
-            await renderizarComEfeitoDigitacao(textoIA);
-
-        } else if (dados.error) {
-            renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
-        } else {
-            renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido.", "ai-message");
+            sucesso = true;
+        } catch (erro) {
+            if (tentativas < 3) {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                continue;
+            }
+            loadingElement.remove();
+            renderizarMensagemNaTelaInstantanea("❌ Erro de conexão.", "ai-message");
+            return;
         }
+    }
 
-    } catch (erro) {
-        document.getElementById(loadingId).remove();
-        renderizarMensagemNaTelaInstantanea("❌ Erro de conexão.", "ai-message");
+    loadingElement.remove();
+
+    if (dados && dados.candidates && dados.candidates.length > 0) {
+        const textoIA = dados.candidates[0].content.parts[0].text;
+        sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
+        salvarDados();
+        
+        await renderizarComEfeitoDigitacao(textoIA);
+
+    } else if (dados && dados.error) {
+        renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
+    } else {
+        renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido.", "ai-message");
     }
 }
 
