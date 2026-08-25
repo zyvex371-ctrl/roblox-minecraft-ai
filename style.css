@@ -6,11 +6,10 @@
 }
 
 html, body {
-    height: 100%;
-    height: 100dvh;
+    min-height: 100vh;
     background-color: #121212;
     color: #ffffff;
-    overflow: hidden;
+    /* Removido o overflow: hidden para o navegador permitir puxar para cima/baixo para atualizar */
 }
 
 /* SIDEBAR NA DIREITA */
@@ -58,7 +57,6 @@ html, body {
     text-align: center;
 }
 
-/* ESTILO DO BOTÃO DO CÉREBRO */
 .brain-btn {
     background-color: #333;
     color: #00ff88;
@@ -132,7 +130,6 @@ html, body {
     transform: scale(1.1);
 }
 
-/* OVERLAY ESCURO */
 .overlay {
     position: fixed;
     top: 0;
@@ -148,11 +145,10 @@ html, body {
     display: block;
 }
 
-/* CONTAINER DO CHAT */
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh;
     width: 100%;
     background-color: #1e1e1e;
 }
@@ -164,7 +160,9 @@ header {
     align-items: center;
     justify-content: space-between;
     border-bottom: 2px solid #00ff88;
-    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .header-left {
@@ -193,8 +191,7 @@ header p {
 
 .chat-box {
     flex: 1;
-    padding: 15px;
-    overflow-y: auto;
+    padding: 15px 15px 80px 15px; /* Espaço embaixo para a barra fixa não tampar as mensagens */
     display: flex;
     flex-direction: column;
     gap: 15px; 
@@ -282,11 +279,15 @@ header p {
     color: #000;
 }
 
-/* BARRA ESTILO CHATGPT */
+/* BARRA FIXADA NA PARTE INFERIOR IGUAL AO CHATGPT */
 .input-container-wrapper {
-    padding: 12px 15px;
-    background-color: #1e1e1e;
-    flex-shrink: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 15px;
+    background: linear-gradient(to top, #1e1e1e 80%, transparent);
+    z-index: 10;
 }
 
 .input-area {
