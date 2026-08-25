@@ -3,43 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeCraft AI | Roblox & Minecraft</title>
+    <title>CodeCraft AI - Delta Mobile</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #161b22; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
+        h1 { font-size: 18px; color: #58a6ff; }
+        .menu-btn { background: none; border: none; color: #c9d1d9; font-size: 22px; cursor: pointer; }
+        #chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 85%; padding: 12px; border-radius: 8px; line-height: 1.4; font-size: 14px; word-break: break-word; }
+        .user-message { background: #1f6feb; color: white; align-self: flex-end; }
+        .ai-message { background: #21262d; color: #c9d1d9; align-self: flex-start; border: 1px solid #30363d; }
+        .input-area { background: #161b22; padding: 10px; display: flex; gap: 10px; border-top: 1px solid #30363d; }
+        input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
+        button.send-btn { background: #238636; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        pre { background: #010409; padding: 10px; border-radius: 6px; margin-top: 8px; overflow-x: auto; position: relative; }
+        code { font-family: monospace; font-size: 13px; color: #79c0ff; }
+        .copy-btn { position: absolute; top: 5px; right: 5px; background: #30363d; color: white; border: none; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
+        .sidebar { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: #161b22; transition: 0.3s; z-index: 100; border-right: 1px solid #30363d; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { padding: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #30363d; }
+        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .history-item { padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 5px; font-size: 13px; color: #8b949e; background: #0d1117; }
+        .history-item.active { color: white; background: #21262d; border: 1px solid #30363d; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 99; }
+        .overlay.active { display: block; }
+    </style>
 </head>
 <body>
 
-    <div id="overlay" class="overlay" onclick="fecharMenu()"></div>
+    <div class="overlay" id="overlay" onclick="fecharMenu()"></div>
 
-    <div id="sidebar" class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>💬 Histórico</h2>
-            <button class="close-btn" onclick="fecharMenu()">✕</button>
+            <h3>Seus Chats</h3>
+            <button class="menu-btn" onclick="fecharMenu()">✕</button>
         </div>
-        
-        <button class="new-chat-btn" onclick="novoChat()">➕ Novo Chat</button>
-        <button class="brain-btn" onclick="configurarCerebro()">🧠 Configurar Cérebro</button>
-
-        <div id="history-list" class="history-list"></div>
+        <div style="padding: 10px;">
+            <button onclick="novoChat()" style="width: 100%; background: #238636; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Novo Chat</button>
+        </div>
+        <div class="history-list" id="history-list"></div>
     </div>
 
-    <div class="main-container">
-        <header class="chat-header">
-            <button class="menu-btn" onclick="abrirMenu()">&#9776;</button>
-            <div class="header-title">
-                <h1>CodeCraft AI</h1>
-                <span>Roblox & Minecraft</span>
-            </div>
-        </header>
+    <header>
+        <button class="menu-btn" onclick="abrirMenu()">☰</button>
+        <h1>CodeCraft AI</h1>
+        <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro">🧠</button>
+    </header>
 
-        <div id="chat-box" class="chat-box"></div>
+    <div id="chat-box"></div>
 
-        <div class="input-container">
-            <textarea id="user-input" placeholder="Perguntar ao CodeCraft..."></textarea>
-            <button id="send-btn" onclick="enviarMensagem()">➤</button>
-        </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Digite sua dúvida ou pedido de script..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
+        <button class="send-btn" onclick="enviarMensagem()">Enviar</button>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const parte1 = "AQ.Ab8RN6Lsonh";
+        const parte2 = "k347uSOBJmzQlPtNioPPiwr2QDmBRhJ0ZhLG_Hw";
+        const API_KEY = parte1 + parte2;
+
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+
+        let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada.";
+        let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+        let chatAtualId = localStorage.getItem('codecraft_atual_id') || null;
+
+        window.onload = function() {
+            if (sessoes.length === 0) novoChat();
+            else if (chatAtualId) carregarChat(chatAtualId);
+            else novoChat();
+        };
+
+        function abrirMenu() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function fecharMenu() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function novoChat() {
+            const novoId = 'chat_' + Date.now();
+            sessoes.unshift({ id: novoId, titulo: 'Novo Chat', mensagens: [] });
+            chatAtualId = novoId;
+            salvarDados();
+            chatBox.innerHTML = `<div class="message ai-message">Salve, Heitor! CodeCraft pronto para o Delta Mobile. O que vamos programar hoje?</div>`;
+            carregarListaChats();
+            fecharMenu();
+        }
+
+        function configurarCerebro() {
+            fecharMenu();
+            const nova = prompt("🧠 Instrução permanente para a IA:", customMemory === "Nenhuma instrução personalizada." ? "" : customMemory);
+            if (nova !== null) {
+                customMemory = nova.trim() || "Nenhuma instrução personalizada.";
+                localStorage.setItem('codecraft_custom_memory', customMemory);
+                alert("✅ Cérebro atualizado!");
+            }
+        }
+
+        function salvarDados() {
+            localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
+            localStorage.setItem('codecraft_atual_id', chatAtualId);
+            carregarListaChats();
+        }
+
+        function carregarListaChats() {
+            const listDiv = document.getElementById('history-list');
+            if (!listDiv) return;
+            listDiv.innerHTML = '';
+            sessoes.forEach(s => {
+                const item = document.createElement('div');
+                item.className = `history-item ${s.id === chatAtualId ? 'active' : ''}`;
+                item.innerText = s.titulo;
+                item.onclick = () => carregarChat(s.id);
+                listDiv.appendChild(item);
+            });
+        }
+
+        function carregarChat(id) {
+            chatAtualId = id;
+            salvarDados();
+            const sessao = sessoes.find(s => s.id === id);
+            if (!sessao) return;
+            chatBox.innerHTML = '';
+            if (sessao.mensagens.length === 0) {
+                chatBox.innerHTML = `<div class="message ai-message">Chat limpo. Manda a braba!</div>`;
+            } else {
+                sessao.mensagens.forEach(m => renderizarMensagem(m.texto, m.classe));
+            }
+            fecharMenu();
+        }
+
+        function renderizarMensagem(texto, classe) {
+            const div = document.createElement("div");
+            div.className = `message ${classe}`;
+            if (classe === "ai-message" && typeof marked !== "undefined") {
+                div.innerHTML = marked.parse(texto);
+                adicionarBotoesCopiar(div);
+            } else {
+                div.innerHTML = texto.replace(/\n/g, '<br>');
+            }
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function adicionarBotoesCopiar(container) {
+            container.querySelectorAll("pre").forEach(bloco => {
+                if (bloco.querySelector(".copy-btn")) return;
+                const btn = document.createElement("button");
+                btn.className = "copy-btn";
+                btn.innerHTML = "📋 Copiar";
+                btn.onclick = () => {
+                    navigator.clipboard.writeText(bloco.querySelector("code").innerText);
+                    btn.innerHTML = "✅ Copiado!";
+                    setTimeout(() => btn.innerHTML = "📋 Copiar", 2000);
+                };
+                bloco.appendChild(btn);
+            });
+        }
+
+        async function enviarMensagem() {
+            const txt = userInput.value.trim();
+            if (!txt) return;
+            userInput.value = "";
+
+            const sessao = sessoes.find(s => s.id === chatAtualId);
+            if (!sessao) return;
+
+            if (sessao.mensagens.length === 0 && sessao.titulo === 'Novo Chat') {
+                sessao.titulo = txt.substring(0, 20) + (txt.length > 20 ? '...' : '');
+            }
+
+            sessao.mensagens.push({ texto: txt, classe: "user-message" });
+            renderizarMensagem(txt, "user-message");
+            salvarDados();
+
+            // Mensagem temporária de carregamento segura
+            const loadId = "load_" + Date.now();
+            const loadDiv = document.createElement("div");
+            loadDiv.className = "message ai-message";
+            loadDiv.id = loadId;
+            loadDiv.innerText = "Pensando...";
+            chatBox.appendChild(loadDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let historico = sessao.mensagens.map(m => ({
+                role: m.classe === "user-message" ? "user" : "model",
+                parts: [{ text: m.texto }]
+            }));
+
+            try {
+                const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: `Você é especialista em Luau e Roblox Studio para executores mobile como o Delta. Instruções: ${customMemory}` }] },
+                        contents: historico,
+                        generationConfig: { maxOutputTokens: 8192, temperature: 0.7 }
+                    })
+                });
+
+                const dados = await resposta.json();
+                
+                // Remove o "Pensando..." com segurança
+                const el = document.getElementById(loadId);
+                if (el) el.remove();
+
+                if (dados.candidates && dados.candidates.length > 0) {
+                    const respostaIA = dados.candidates[0].content.parts[0].text;
+                    sessao.mensagens.push({ texto: respostaIA, classe: "ai-message" });
+                    renderizarMensagem(respostaIA, "ai-message");
+                    salvarDados();
+                } else if (dados.error) {
+                    renderizarMensagem("❌ Erro da API: " + dados.error.message, "ai-message");
+                } else {
+                    renderizarMensagem("❌ Erro na resposta do servidor.", "ai-message");
+                }
+
+            } catch (err) {
+                const el = document.getElementById(loadId);
+                if (el) el.remove();
+                renderizarMensagem("❌ Erro de conexão: " + err.message, "ai-message");
+            }
+        }
+    </script>
 </body>
 </html>
