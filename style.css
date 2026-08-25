@@ -1,4 +1,3 @@
-/* Configurações Globais */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -14,7 +13,6 @@ body {
     overflow: hidden;
 }
 
-/* Menu Lateral (Sidebar) */
 .sidebar {
     position: fixed;
     top: 0;
@@ -118,7 +116,6 @@ body {
     opacity: 1;
 }
 
-/* Overlay Escuro */
 .overlay {
     position: fixed;
     top: 0;
@@ -134,7 +131,6 @@ body {
     display: block;
 }
 
-/* Container Principal do Chat */
 .main-container {
     flex: 1;
     display: flex;
@@ -171,7 +167,6 @@ body {
     color: #888;
 }
 
-/* Caixa de Conversas */
 .chat-box {
     flex: 1;
     padding: 15px;
@@ -181,7 +176,6 @@ body {
     gap: 12px;
 }
 
-/* Balões de Mensagem */
 .message {
     max-width: 85%;
     padding: 12px 15px;
@@ -207,7 +201,6 @@ body {
     width: 100%;
 }
 
-/* Blocos de Código e Botão Copiar */
 pre {
     background-color: #0d0d0d !important;
     padding: 12px;
@@ -241,10 +234,9 @@ code {
     background-color: #444;
 }
 
-/* Área de Input */
 .input-container {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     padding: 10px 15px;
     background-color: #1a1a1a;
     border-top: 1px solid #333;
@@ -259,14 +251,10 @@ code {
     border-radius: 8px;
     padding: 10px 12px;
     font-size: 0.95rem;
-    resize: none;
-    overflow-y: auto;
-    max-height: 120px;
-    line-height: 1.4;
+    outline: none;
 }
 
 #user-input:focus {
-    outline: none;
     border-color: #2b5278;
 }
 
