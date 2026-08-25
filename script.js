@@ -13,7 +13,7 @@ const atualizarRegras = () => {
 REGRAS OBRIGATÓRIAS:
 1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios ou reticências (...).
 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-3. FOCO ABSOLUTO EM MOBILE / DELTA E NOCLIP INTELIGENTE: Todos os scripts em Luau gerados devem ser totalmente compatíveis e otimizados para rodar no Delta em celulares. Em scripts de Noclip ou física, NUNCA force loops cegos em todas as peças (`CanCollide = false` direto). Sempre use verificação condicional inteligente (ex: verificar se a peça realmente tem colisão ativa `if v:IsA('BasePart') and v.CanCollide then`) para evitar que o servidor rejeite ou trave o jogo. Prefira UIs limpas com ScreenGui nativo.
+3. FOCO ABSOLUTO EM MOBILE / DELTA: Todos os scripts em Luau gerados devem ser totalmente compatíveis e otimizados para rodar no Delta em celulares. Evite funções pesadas de PC, loops agressivos no RenderStepped, manipulações perigosas de CoreGUI e bibliotecas de desenho externas que façam o jogo fechar. Prefira UIs limpas com ScreenGui nativo e códigos leves.
 4. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO: ${customMemory}
 5. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
 6. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
@@ -70,7 +70,7 @@ function novoChat() {
 function configurarCerebro() {
     fecharMenu();
     const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
-    const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA:", promptAtual);
+    const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA (Ex: 'Lembre-se que meu nome é Gabriel e sou seu dono'):", promptAtual);
     
     if (novaInstrucao !== null) {
         customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
