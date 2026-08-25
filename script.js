@@ -5,85 +5,199 @@ const API_KEY = parte1 + parte2;
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 
-// 🧠 MEMÓRIA DA IA
-let historico = [];
+// Memória global entre conversas armazenada no navegador
+let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum histórico anterior.";
 
-// 📜 REGRAS DE COMPORTAMENTO
-const regrasIA = "Você é uma IA especialista em Roblox e Minecraft. REGRAS IMPORTANTES: 1. Seja amigável e converse naturalmente. 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um código ou script. Se ele disser 'Oi', apenas cumprimente e pergunte como pode ajudar. 3. Para scripts de Roblox, saiba que o usuário pode querer códigos para o Roblox Studio ou para executores como o Delta. Adapte-se ao que ele pedir e crie scripts compatíveis.";
+// Regras avançadas com limite máximo de tokens para códigos gigantes e completos
+const atualizarRegras = () => {
+    return `Você é uma IA sênior especialista em criar sistemas inteiros, gigantes, modulares e COMPLETOS para Roblox (Roblox Studio / Luau) e para executores como Delta, além de mods para Minecraft. 
+REGRAS OBRIGATÓRIAS:
+1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios do tipo '-- coloque seu código aqui' ou reticências (...).
+2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
+3. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES COM ESTE USUÁRIO (Lembre-se destes tópicos para manter o contexto entre chats diferentes): ${globalMemory}
+4. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
+};
+
+let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+let chatAtualId = localStorage.getItem('codecraft_atual_id') || null;
+
+window.onload = function() {
+    carregarListaChats();
+    if (sessoes.length === 0) {
+        novoChat();
+    } else if (chatAtualId) {
+        carregarChat(chatAtualId);
+    } else {
+        novoChat();
+    }
+};
+
+function abrirMenu() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('active');
+}
+
+function fecharMenu() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+function observarEnter(event) {
+    if (event.key === 'Enter') enviarMensagem();
+}
+
+function novoChat() {
+    const novoId = 'chat_' + Date.now();
+    const novaSessao = {
+        id: novoId,
+        titulo: 'Novo Chat',
+        mensagens: []
+    };
+    sessoes.unshift(novaSessao);
+    chatAtualId = novoId;
+    salvarDados();
+    
+    chatBox.innerHTML = `
+        <div class="message ai-message">
+            Olá! Novo chat iniciado com o cérebro conectado à memória global. O que vamos programar hoje para o Roblox (Studio ou Delta) ou Minecraft?
+        </div>
+    `;
+    carregarListaChats();
+    fecharMenu();
+}
+
+function salvarDados() {
+    localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
+    localStorage.setItem('codecraft_atual_id', chatAtualId);
+    
+    // Atualiza a memória global resumindo os chats salvos
+    let resumo = sessoes.map(s => `[Chat: ${s.titulo}]`).join(' | ');
+    globalMemory = resumo;
+    localStorage.setItem('codecraft_global_memory', globalMemory);
+}
+
+function carregarListaChats() {
+    const listDiv = document.getElementById('history-list');
+    listDiv.innerHTML = '';
+    
+    sessoes.forEach(sessao => {
+        const item = document.createElement('div');
+        item.className = `history-item ${sessao.id === chatAtualId ? 'active' : ''}`;
+        item.innerText = sessao.titulo;
+        item.onclick = () => carregarChat(sessao.id);
+        listDiv.appendChild(item);
+    });
+}
+
+function carregarChat(id) {
+    chatAtualId = id;
+    salvarDados();
+    carregarListaChats();
+    
+    const sessao = sessoes.find(s => s.id === id);
+    if (!sessao) return;
+    
+    chatBox.innerHTML = '';
+    
+    if (sessao.mensagens.length === 0) {
+        chatBox.innerHTML = `
+            <div class="message ai-message">
+                Chat carregado. Como posso ajudar com seus scripts?
+            </div>
+        `;
+    } else {
+        sessao.mensagens.forEach(msg => {
+            renderizarMensagemNaTelaInstantanea(msg.texto, msg.classe);
+        });
+    }
+    fecharMenu();
+}
 
 async function enviarMensagem() {
     const textoUsuario = userInput.value.trim();
     if (textoUsuario === "") return;
 
-    adicionarMensagem(textoUsuario, "user-message");
+    renderizarMensagemNaTelaInstantanea(textoUsuario, "user-message");
     userInput.value = "";
 
-    // Salva o que VOCÊ disse na memória
-    historico.push({ role: "user", parts: [{ text: textoUsuario }] });
+    const sessao = sessoes.find(s => s.id === chatAtualId);
+    if (!sessao) return;
 
-    const loadingId = adicionarMensagem("Pensando...", "ai-message");
-    
+    if (sessao.mensagens.length === 0) {
+        sessao.titulo = textoUsuario.substring(0, 25) + (textoUsuario.length > 25 ? '...' : '');
+        carregarListaChats();
+    }
+
+    sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
+    salvarDados();
+
+    // Bolha de carregamento
+    const loadingId = adicionarMensagemGenerica("Pensando...", "ai-message");
+
+    let historicoFormatado = [];
+    sessao.mensagens.forEach(m => {
+        historicoFormatado.push({
+            role: m.classe === "user-message" ? "user" : "model",
+            parts: [{ text: m.texto }]
+        });
+    });
+
     try {
-        // CORRIGIDO: Voltando para a versão 3.6-flash que funciona com a sua chave!
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                systemInstruction: { parts: [{ text: regrasIA }] }, 
-                contents: historico 
+                systemInstruction: { parts: [{ text: atualizarRegras() }] },
+                contents: historicoFormatado,
+                generationConfig: {
+                    maxOutputTokens: 8192, // Capacidade máxima liberada para códigos gigantes
+                    temperature: 0.7
+                }
             })
         });
 
         const dados = await resposta.json();
-        
         document.getElementById(loadingId).remove();
 
         if (dados.candidates && dados.candidates.length > 0) {
             const textoIA = dados.candidates[0].content.parts[0].text;
+            sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
+            salvarDados();
             
-            // Salva o que a IA respondeu na memória
-            historico.push({ role: "model", parts: [{ text: textoIA }] }); 
-            
-            adicionarMensagem(textoIA, "ai-message");
+            // Efeito de digitação estilo ChatGPT!
+            await renderizarComEfeitoDigitacao(textoIA);
+
         } else if (dados.error) {
-            adicionarMensagem("❌ Erro do Google: " + dados.error.message, "ai-message");
+            renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
         } else {
-            adicionarMensagem("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
+            renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido.", "ai-message");
         }
 
     } catch (erro) {
         document.getElementById(loadingId).remove();
-        adicionarMensagem("❌ Erro no código: " + erro.message, "ai-message");
+        renderizarMensagemNaTelaInstantanea("❌ Erro de conexão.", "ai-message");
     }
 }
 
-function adicionarMensagem(texto, classe) {
+function adicionarMensagemGenerica(texto, classe) {
+    const div = document.createElement("div");
+    div.className = `message ${classe}`;
+    div.innerHTML = texto.replace(/\n/g, '<br>');
+    const idUnico = "msg-" + Date.now();
+    div.id = idUnico;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return idUnico;
+}
+
+function renderizarMensagemNaTelaInstantanea(texto, classe) {
     const div = document.createElement("div");
     div.className = `message ${classe}`;
     
-    if (classe === "ai-message" && texto !== "Pensando..." && !texto.startsWith("❌")) {
+    if (classe === "ai-message" && !texto.startsWith("❌")) {
         if (typeof marked !== "undefined") {
             div.innerHTML = marked.parse(texto);
-            
-            // MÁGICA DO BOTÃO DE COPIAR
-            const blocosDeCodigo = div.querySelectorAll("pre"); 
-            blocosDeCodigo.forEach((bloco) => {
-                const botaoCopiar = document.createElement("button");
-                botaoCopiar.className = "copy-btn";
-                botaoCopiar.innerHTML = "📋 Copiar";
-                
-                botaoCopiar.onclick = function() {
-                    const codigo = bloco.querySelector("code").innerText;
-                    navigator.clipboard.writeText(codigo); 
-                    botaoCopiar.innerHTML = "✅ Copiado!"; 
-                    setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); 
-                };
-                
-                bloco.appendChild(botaoCopiar); 
-            });
-
+            adicionarBotoesCopiar(div);
         } else {
             div.innerHTML = texto.replace(/\n/g, '<br>'); 
         }
@@ -91,9 +205,57 @@ function adicionarMensagem(texto, classe) {
         div.innerHTML = texto.replace(/\n/g, '<br>'); 
     }
     
-    const idUnico = "msg-" + Date.now();
-    div.id = idUnico;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
-    return idUnico;
+}
+
+// EFEITO DE DIGITAÇÃO ESTILO CHATGPT
+async function renderizarComEfeitoDigitacao(textoCompleto) {
+    const div = document.createElement("div");
+    div.className = "message ai-message";
+    chatBox.appendChild(div);
+
+    let i = 0;
+    // Velocidade de digitação fluida
+    const velocidade = 6; 
+    
+    return new Promise((resolve) => {
+        const timer = setInterval(() => {
+            if (i < textoCompleto.length) {
+                // Exibe em blocos curtos para agilizar a digitação de textos grandes
+                div.textContent += textoCompleto.substring(i, i + 4);
+                i += 4;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } else {
+                clearInterval(timer);
+                // Quando termina de digitar, converte perfeitamente para Markdown formatado com caixas de código e botão copiar
+                if (typeof marked !== "undefined") {
+                    div.innerHTML = marked.parse(textoCompleto);
+                    adicionarBotoesCopiar(div);
+                } else {
+                    div.innerHTML = textoCompleto.replace(/\n/g, '<br>');
+                }
+                chatBox.scrollTop = chatBox.scrollHeight;
+                resolve();
+            }
+        }, velocidade);
+    });
+}
+
+function adicionarBotoesCopiar(containerDiv) {
+    const blocosDeCodigo = containerDiv.querySelectorAll("pre"); 
+    blocosDeCodigo.forEach((bloco) => {
+        const botaoCopiar = document.createElement("button");
+        botaoCopiar.className = "copy-btn";
+        botaoCopiar.innerHTML = "📋 Copiar";
+        
+        botaoCopiar.onclick = function() {
+            const codigo = bloco.querySelector("code").innerText;
+            navigator.clipboard.writeText(codigo); 
+            botaoCopiar.innerHTML = "✅ Copiado!"; 
+            setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); 
+        };
+        
+        bloco.appendChild(botaoCopiar); 
+    });
 }
