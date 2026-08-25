@@ -33,16 +33,20 @@ async function enviarMensagem() {
         
         document.getElementById(loadingId).remove();
 
+        // AQUI ESTÁ A MÁGICA DO DETETIVE:
         if (dados.candidates && dados.candidates.length > 0) {
             const textoIA = dados.candidates[0].content.parts[0].text;
             adicionarMensagem(textoIA, "ai-message");
+        } else if (dados.error) {
+            // Se o Google barrar, ele vai mostrar o motivo exato na tela!
+            adicionarMensagem("❌ Erro do Google: " + dados.error.message, "ai-message");
         } else {
-            adicionarMensagem("Ocorreu um erro ao gerar a resposta.", "ai-message");
+            adicionarMensagem("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
         }
 
     } catch (erro) {
         document.getElementById(loadingId).remove();
-        adicionarMensagem("Erro de conexão.", "ai-message");
+        adicionarMensagem("❌ Erro de conexão com a internet.", "ai-message");
     }
 }
 
