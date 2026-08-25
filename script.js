@@ -17,7 +17,8 @@ async function enviarMensagem() {
     const systemPrompt = "Você é uma IA sênior especialista em scripts para Roblox (Luau) e criação de mods para Minecraft. Forneça códigos prontos, limpos e explique como usar. O usuário perguntou: ";
     
     try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        // A MÁGICA FOI AQUI: Mudamos para gemini-1.5-flash-latest
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -33,12 +34,10 @@ async function enviarMensagem() {
         
         document.getElementById(loadingId).remove();
 
-        // AQUI ESTÁ A MÁGICA DO DETETIVE:
         if (dados.candidates && dados.candidates.length > 0) {
             const textoIA = dados.candidates[0].content.parts[0].text;
             adicionarMensagem(textoIA, "ai-message");
         } else if (dados.error) {
-            // Se o Google barrar, ele vai mostrar o motivo exato na tela!
             adicionarMensagem("❌ Erro do Google: " + dados.error.message, "ai-message");
         } else {
             adicionarMensagem("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
