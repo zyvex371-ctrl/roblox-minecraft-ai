@@ -9,7 +9,7 @@
 body {
     background-color: #121212;
     color: #e0e0e0;
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     overflow: hidden;
 }
@@ -139,7 +139,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
     width: 100%;
     background-color: #121212;
 }
@@ -259,9 +259,9 @@ code {
     border-radius: 8px;
     padding: 10px 12px;
     font-size: 0.95rem;
-    resize: none;          /* Impede de deformar a caixa manualmente */
-    overflow-y: auto;      /* Cria barra de rolagem se o texto for muito longo */
-    max-height: 120px;     /* Limita a altura para não cobrir a tela do celular */
+    resize: none;
+    overflow-y: auto;
+    max-height: 120px;
     line-height: 1.4;
 }
 
