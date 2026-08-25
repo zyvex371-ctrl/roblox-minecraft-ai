@@ -3,54 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeCraft AI</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Biblioteca para estilizar os códigos e textos -->
+    <title>CodeCraft AI | Roblox & Minecraft</title>
+    <!-- Biblioteca para formatar os blocos de código e Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- SIDEBAR (Menu lateral na Direita) -->
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h3>Meus Chats</h3>
-            <button onclick="novoChat()" class="new-chat-btn">+ Novo Chat</button>
-            <!-- BOTÃO PARA MEXER NO CÉREBRO DA IA -->
-            <button onclick="configurarCerebro()" class="brain-btn">🧠 Cérebro da IA</button>
-        </div>
-        <div id="history-list" class="history-list">
-            <!-- Histórico de chats -->
-        </div>
-    </div>
 
-    <!-- OVERLAY (Fundo escuro) -->
+    <!-- Overlay escuro para fechar o menu lateral no celular -->
     <div id="overlay" class="overlay" onclick="fecharMenu()"></div>
 
-    <div class="chat-container">
-        <header>
-            <div class="header-left">
-                <h1>🤖 CodeCraft AI</h1>
-                <p>Roblox & Minecraft</p>
-            </div>
-            <!-- BOTÃO DE 3 TRACINHOS NA PONTA DIREITA -->
-            <button id="menu-btn" class="menu-btn" onclick="abrirMenu()">☰</button>
-        </header>
-        
-        <div id="chat-box" class="chat-box">
-            <div class="message ai-message">
-                Olá! Sou sua IA especialista em sistemas completos para Roblox (Studio / Delta) e Minecraft. Como posso ajudar hoje?
-            </div>
+    <!-- Menu Lateral (Histórico e Opções) -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>💬 Histórico</h2>
+            <button class="close-btn" onclick="fecharMenu()">✕</button>
         </div>
+        
+        <button class="new-chat-btn" onclick="novoChat()">➕ Novo Chat</button>
+        <button class="brain-btn" onclick="configurarCerebro()">🧠 Configurar Cérebro</button>
 
-        <!-- BARRA DE FALA ESTILO CHATGPT -->
-        <div class="input-container-wrapper">
-            <div class="input-area">
-                <button class="plus-btn" title="Mais opções">+</button>
-                <input type="text" id="user-input" placeholder="Perguntar ao CodeCraft..." onkeypress="observarEnter(event)">
-                <button class="send-btn" onclick="enviarMensagem()">➤</button>
-            </div>
+        <div id="history-list" class="history-list">
+            <!-- Os chats salvos aparecem aqui automaticamente -->
         </div>
     </div>
 
+    <!-- Área Principal da Aplicação -->
+    <div class="main-container">
+        <header class="chat-header">
+            <button class="menu-btn" onclick="abrirMenu()">☰</button>
+            <div class="header-title">
+                <h1>CodeCraft AI</h1>
+                <span>Roblox & Minecraft</span>
+            </div>
+        </header>
+
+        <!-- Caixa onde as mensagens da conversa aparecem -->
+        <div id="chat-box" class="chat-box">
+            <!-- Mensagens injetadas via JavaScript -->
+        </div>
+
+        <!-- Área de Digitação (Textarea para múltiplas linhas) -->
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Perguntar ao CodeCraft..." rows="1"></textarea>
+            <button id="send-btn" onclick="enviarMensagem()">➤</button>
+        </div>
+    </div>
+
+    <!-- Script principal do site -->
     <script src="script.js"></script>
 </body>
 </html>
