@@ -1,5 +1,5 @@
-const parte1 = "AQ.Ab8RN6";
-const parte2 = "Ji138Rox2FoxnvTLJK1eoVEMgwEiYWdkUuUPqg0Mgd4A";
+const parte1 = "AQ.Ab8RN6Lsonh";
+const parte2 = "k347uSOBJmzQlPtNioPPiwr2QDmBRhJ0ZhLG_Hw";
 const API_KEY = parte1 + parte2;
 
 const chatBox = document.getElementById("chat-box");
@@ -59,7 +59,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! Novo chat iniciado. O que vamos programar hoje?
+            Olá! Nova chave de API conectada com sucesso. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
