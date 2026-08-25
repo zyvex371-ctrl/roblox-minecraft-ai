@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeCraft AI | Roblox & Minecraft</title>
-    <!-- Biblioteca para formatar os blocos de código e Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Overlay escuro para fechar o menu lateral no celular -->
     <div id="overlay" class="overlay" onclick="fecharMenu()"></div>
 
-    <!-- Menu Lateral (Histórico e Opções) -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h2>💬 Histórico</h2>
@@ -23,12 +20,9 @@
         <button class="new-chat-btn" onclick="novoChat()">➕ Novo Chat</button>
         <button class="brain-btn" onclick="configurarCerebro()">🧠 Configurar Cérebro</button>
 
-        <div id="history-list" class="history-list">
-            <!-- Os chats salvos aparecem aqui automaticamente -->
-        </div>
+        <div id="history-list" class="history-list"></div>
     </div>
 
-    <!-- Área Principal da Aplicação -->
     <div class="main-container">
         <header class="chat-header">
             <button class="menu-btn" onclick="abrirMenu()">☰</button>
@@ -38,19 +32,14 @@
             </div>
         </header>
 
-        <!-- Caixa onde as mensagens da conversa aparecem -->
-        <div id="chat-box" class="chat-box">
-            <!-- Mensagens injetadas via JavaScript -->
-        </div>
+        <div id="chat-box" class="chat-box"></div>
 
-        <!-- Área de Digitação (Textarea para múltiplas linhas) -->
         <div class="input-container">
-            <textarea id="user-input" placeholder="Perguntar ao CodeCraft..." rows="1"></textarea>
+            <input type="text" id="user-input" placeholder="Perguntar ao CodeCraft..." onkeydown="observarEnter(event)">
             <button id="send-btn" onclick="enviarMensagem()">➤</button>
         </div>
     </div>
 
-    <!-- Script principal do site -->
     <script src="script.js"></script>
 </body>
 </html>
