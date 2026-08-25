@@ -5,24 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeCraft AI</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Importando a biblioteca que entende os códigos e textos grossos (Markdown) -->
+    <!-- Biblioteca para estilizar os códigos e textos -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
+    <!-- SIDEBAR (Menu lateral na Direita) -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>Meus Chats</h3>
+            <button onclick="novoChat()" class="new-chat-btn">+ Novo Chat</button>
+        </div>
+        <div id="history-list" class="history-list">
+            <!-- Histórico de chats -->
+        </div>
+    </div>
+
+    <!-- OVERLAY (Fundo escuro) -->
+    <div id="overlay" class="overlay" onclick="fecharMenu()"></div>
+
     <div class="chat-container">
         <header>
-            <h1>🤖 CodeCraft AI</h1>
-            <p>Sua IA para Roblox e Minecraft</p>
+            <div class="header-left">
+                <h1>🤖 CodeCraft AI</h1>
+                <p>Roblox & Minecraft</p>
+            </div>
+            <!-- BOTÃO DE 3 TRACINHOS NA PONTA DIREITA -->
+            <button id="menu-btn" class="menu-btn" onclick="abrirMenu()">☰</button>
         </header>
         
         <div id="chat-box" class="chat-box">
             <div class="message ai-message">
-                Olá! Sou sua IA especialista. Quer criar um mod para Minecraft ou um script de Roblox hoje?
+                Olá! Sou sua IA especialista em sistemas completos para Roblox (Studio / Delta) e Minecraft. Como posso ajudar hoje?
             </div>
         </div>
 
         <div class="input-area">
-            <input type="text" id="user-input" placeholder="Digite sua dúvida aqui...">
+            <input type="text" id="user-input" placeholder="Digite sua dúvida ou peça um sistema..." onkeypress="observarEnter(event)">
             <button onclick="enviarMensagem()">Enviar</button>
         </div>
     </div>
