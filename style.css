@@ -141,3 +141,28 @@ button {
     font-weight: bold;
     cursor: pointer;
 }
+
+/* --- ESTILO DO BOTÃO DE COPIAR --- */
+.ai-message pre {
+    position: relative; /* Isso permite colocar o botão no cantinho */
+}
+
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #2c2c2c;
+    color: #00ff88;
+    border: 1px solid #00ff88;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin: 0;
+    transition: 0.3s;
+}
+
+.copy-btn:hover {
+    background-color: #00ff88;
+    color: #000;
+}
