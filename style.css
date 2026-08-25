@@ -151,10 +151,14 @@ body {
 .menu-btn {
     background: none;
     border: none;
-    color: #fff;
-    font-size: 1.5rem;
+    color: #ffffff;
+    font-size: 1.8rem;
     cursor: pointer;
     margin-right: 15px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .header-title h1 {
