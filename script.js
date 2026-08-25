@@ -6,7 +6,6 @@ const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 
 let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum histórico anterior.";
-// Memória personalizada salva pelo usuário no Cérebro da IA
 let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
 const atualizarRegras = () => {
@@ -14,7 +13,7 @@ const atualizarRegras = () => {
 REGRAS OBRIGATÓRIAS:
 1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios do tipo '-- coloque seu código aqui' ou reticências (...).
 2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-3. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO (Obrigatório seguir sempre): ${customMemory}
+3. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO: ${customMemory}
 4. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
 5. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
 };
@@ -67,7 +66,6 @@ function novoChat() {
     fecharMenu();
 }
 
-// FUNÇÃO PARA EDITAR O CÉREBRO DA IA MANUALMENTE
 function configurarCerebro() {
     fecharMenu();
     const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
@@ -170,8 +168,7 @@ async function enviarMensagem() {
     sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
     salvarDados();
 
-    const loadingDivId = adicionarMensagemGenerica("Pensando...", "ai-message");
-    const loadingElement = document.getElementById(loadingDivId);
+    const loadingId = adicionarMensagemGenerica("Pensando...", "ai-message");
 
     let historicoFormatado = [];
     sessao.mensagens.forEach(m => {
@@ -181,62 +178,39 @@ async function enviarMensagem() {
         });
     });
 
-    let sucesso = false;
-    let tentativas = 0;
-    let dados = null;
-
-    while (!sucesso && tentativas < 3) {
-        try {
-            tentativas++;
-            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    systemInstruction: { parts: [{ text: atualizarRegras() }] },
-                    contents: historicoFormatado,
-                    generationConfig: {
-                        maxOutputTokens: 8192,
-                        temperature: 0.7
-                    }
-                })
-            });
-
-            dados = await resposta.json();
-
-            if (dados.error && (dados.error.code === 429 || JSON.stringify(dados.error).includes('Quota exceeded'))) {
-                if (tentativas < 3) {
-                    loadingElement.innerHTML = `⏳ O Google pediu para aguardar devido ao limite gratuito. Tentando de novo automaticamente em 15 segundos... (Tentativa ${tentativas}/3)`;
-                    await new Promise(resolve => setTimeout(resolve, 15000));
-                    loadingElement.innerHTML = "Pensando...";
-                    continue;
+    try {
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                systemInstruction: { parts: [{ text: atualizarRegras() }] },
+                contents: historicoFormatado,
+                generationConfig: {
+                    maxOutputTokens: 8192,
+                    temperature: 0.7
                 }
-            }
+            })
+        });
 
-            sucesso = true;
-        } catch (erro) {
-            if (tentativas < 3) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                continue;
-            }
-            loadingElement.remove();
-            renderizarMensagemNaTelaInstantanea("❌ Erro de conexão.", "ai-message");
-            return;
+        const dados = await resposta.json();
+        document.getElementById(loadingId).remove();
+
+        if (dados.candidates && dados.candidates.length > 0) {
+            const textoIA = dados.candidates[0].content.parts[0].text;
+            sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
+            salvarDados();
+            
+            await renderizarComEfeitoDigitacao(textoIA);
+
+        } else if (dados.error) {
+            renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
+        } else {
+            renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
         }
-    }
 
-    loadingElement.remove();
-
-    if (dados && dados.candidates && dados.candidates.length > 0) {
-        const textoIA = dados.candidates[0].content.parts[0].text;
-        sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
-        salvarDados();
-        
-        await renderizarComEfeitoDigitacao(textoIA);
-
-    } else if (dados && dados.error) {
-        renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
-    } else {
-        renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido.", "ai-message");
+    } catch (erro) {
+        document.getElementById(loadingId).remove();
+        renderizarMensagemNaTelaInstantanea("❌ Erro de conexão: " + erro.message, "ai-message");
     }
 }
 
