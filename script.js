@@ -17,7 +17,7 @@ async function enviarMensagem() {
     const systemPrompt = "Você é uma IA sênior especialista em scripts para Roblox (Luau) e criação de mods para Minecraft. Forneça códigos prontos, limpos e explique como usar. O usuário perguntou: ";
     
     try {
-        const resposta = await fetch(`[https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=$){API_KEY}`, {
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -44,7 +44,8 @@ async function enviarMensagem() {
 
     } catch (erro) {
         document.getElementById(loadingId).remove();
-        adicionarMensagem("❌ Erro de conexão com a internet.", "ai-message");
+        // Agora ele mostra o erro verdadeiro na tela se algo der pau!
+        adicionarMensagem("❌ Erro no código: " + erro.message, "ai-message");
     }
 }
 
@@ -52,9 +53,15 @@ function adicionarMensagem(texto, classe) {
     const div = document.createElement("div");
     div.className = `message ${classe}`;
     
-    // A MÁGICA: Se for a IA respondendo, usa o tradutor 'marked' para deixar o código bonito!
+    // O ESCUDO ANTI-CRASH:
     if (classe === "ai-message" && texto !== "Pensando no código..." && !texto.startsWith("❌")) {
-        div.innerHTML = marked.parse(texto);
+        // Verifica se a ferramenta 'marked' carregou no index.html
+        if (typeof marked !== "undefined") {
+            div.innerHTML = marked.parse(texto);
+        } else {
+            // Se falhar, mostra o texto feio mesmo, mas NÃO CRASHA o site!
+            div.innerHTML = texto.replace(/\n/g, '<br>') + "<br><br><small style='color:red;'>Aviso: Falha ao carregar o visual bonito. Verifique se salvou o index.html novo!</small>"; 
+        }
     } else {
         div.innerHTML = texto.replace(/\n/g, '<br>'); 
     }
