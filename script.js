@@ -17,8 +17,8 @@ async function enviarMensagem() {
     const systemPrompt = "Você é uma IA sênior especialista em scripts para Roblox (Luau) e criação de mods para Minecraft. Forneça códigos prontos, limpos e explique como usar. O usuário perguntou: ";
     
     try {
-        // Atualizado para o modelo Gemini 2.0 Flash moderno e rota v1
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+        // Atualizado para o modelo Gemini 3.6 Flash recomendado pelo Google
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
