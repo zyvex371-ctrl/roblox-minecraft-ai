@@ -43,6 +43,10 @@ function fecharMenu() {
     document.getElementById('overlay').classList.remove('active');
 }
 
+function observarEnter(event) {
+    if (event.key === 'Enter') enviarMensagem();
+}
+
 function novoChat() {
     const novoId = 'chat_' + Date.now();
     const novaSessao = {
@@ -56,7 +60,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! CodeCraft otimizado para o Delta Mobile e Noclip Inteligente. O que vamos programar hoje?
+            Olá! CodeCraft otimizado para o Delta Mobile. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
