@@ -9,14 +9,19 @@ let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum hi
 let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
 const atualizarRegras = () => {
-    return `Você é uma IA sênior especialista em criar sistemas inteiros, gigantes, modulares e COMPLETOS para Roblox (Roblox Studio / Luau) focados em EXECUTORES MOBILE (como o Delta), além de mods para Minecraft. 
-REGRAS OBRIGATÓRIAS:
-1. Nunca economize código. Quando o usuário pedir um sistema, forneça o script inteiro, robusto, funcional e estruturado do início ao fim, sem usar atalhos, comentários vazios ou reticências (...).
-2. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-3. FOCO ABSOLUTO EM MOBILE / DELTA: Todos os scripts em Luau gerados devem ser totalmente compatíveis e otimizados para rodar no Delta em celulares. Evite funções pesadas de PC, loops agressivos no RenderStepped, manipulações perigosas de CoreGUI e bibliotecas de desenho externas que façam o jogo fechar. Prefira UIs limpas com ScreenGui nativo e códigos leves.
-4. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DEFINIDAS PELO DONO: ${customMemory}
-5. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
-6. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
+    return `Você é uma IA sênior especialista em engenharia reversa, Roblox Studio e Luau, focada em criar scripts altamente otimizados para EXECUTORES MOBILE (como o Delta).
+
+PROCESSO OBRIGATÓRIO DE PENSAMENTO (Pense estrategicamente antes de gerar o código):
+1. ANÁLISE DE SEGURANÇA E SERVIDOR: Antes de escrever qualquer script, analise barreiras de autoridade de servidor, anti-cheats básicos ou grupos de colisão do jogo.
+2. ENGENHARIA DEFENSIVA RIGOROSA: Nunca assuma que objetos, partes do avatar ou serviços existem. Todo script deve obrigatoriamente usar verificações de nulidade defensivas (ex: 'if character and humanoid then') e blocos 'pcall()' para evitar que erros quebrem o executor no celular.
+3. OTIMIZAÇÃO MOBILE: Em loops contínuos (como RunService.Stepped), garanta varreduras leves, condicionais inteligentes (ex: verificar se `v.CanCollide` é verdadeiro antes de alterar) e otimizadas para não causar travamentos ou queda de FPS.
+4. PADRÃO DE QUALIDADE: Forneça o código inteiro, robusto, funcional, limpo e estruturado do início ao fim, sem usar atalhos ou reticências (...).
+
+REGRAS GERAIS:
+5. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
+6. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DO DONO: ${customMemory}
+7. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
+8. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
 };
 
 let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
@@ -43,10 +48,6 @@ function fecharMenu() {
     document.getElementById('overlay').classList.remove('active');
 }
 
-function observarEnter(event) {
-    if (event.key === 'Enter') enviarMensagem();
-}
-
 function novoChat() {
     const novoId = 'chat_' + Date.now();
     const novaSessao = {
@@ -60,7 +61,7 @@ function novoChat() {
     
     chatBox.innerHTML = `
         <div class="message ai-message">
-            Olá! CodeCraft otimizado para o Delta Mobile. O que vamos programar hoje?
+            Olá, Heitor! CodeCraft atualizado com raciocínio defensivo para o Delta Mobile. O que vamos programar hoje?
         </div>
     `;
     carregarListaChats();
@@ -70,7 +71,7 @@ function novoChat() {
 function configurarCerebro() {
     fecharMenu();
     const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
-    const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA (Ex: 'Lembre-se que meu nome é Gabriel e sou seu dono'):", promptAtual);
+    const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA:", promptAtual);
     
     if (novaInstrucao !== null) {
         customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
