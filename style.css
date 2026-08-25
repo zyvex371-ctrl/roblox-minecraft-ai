@@ -236,7 +236,7 @@ code {
 
 .input-container {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     padding: 10px 15px;
     background-color: #1a1a1a;
     border-top: 1px solid #333;
@@ -252,6 +252,10 @@ code {
     padding: 10px 12px;
     font-size: 0.95rem;
     outline: none;
+    resize: none;
+    overflow-y: auto;
+    max-height: 120px;
+    line-height: 1.4;
 }
 
 #user-input:focus {
