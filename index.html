@@ -265,12 +265,12 @@ MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}`;
             });
 
             try {
-                // Alterado para gemini-1.5-flash que possui cota livre generativa alta (sem o limite de 20 requisições)
-                const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                // Modelo atualizado e 100% compatível com a API v1
+                const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${API_KEY}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        system_instruction: { parts: [{ text: atualizarRegras() }] },
+                        systemInstruction: { parts: [{ text: atualizarRegras() }] },
                         contents: historicoFormatado,
                         generationConfig: {
                             maxOutputTokens: 8192,
