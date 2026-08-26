@@ -63,8 +63,11 @@
 
     <header>
         <button class="menu-btn" onclick="abrirMenu()">☰</button>
-        <h1>CodeCraft AI (Groq)</h1>
-        <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 18px;">🧠</button>
+        <h1>CodeCraft AI</h1>
+        <div style="display: flex; gap: 5px;">
+            <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 18px;">🔑</button>
+            <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 18px;">🧠</button>
+        </div>
     </header>
 
     <div id="chat-box"></div>
@@ -75,8 +78,8 @@
     </div>
 
     <script>
-        // Chave nova da Groq integrada com segurança
-        const GROQ_API_KEY = "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";
+        // Chave gerenciada com segurança no navegador (não vai para o GitHub)
+        let GROQ_API_KEY = localStorage.getItem('codecraft_groq_key') || "";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -103,6 +106,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
 
         window.onload = function() {
             try {
+                verificarChaveInicial();
                 carregarListaChats();
                 if (sessoes.length === 0 || !chatAtualId) {
                     novoChat();
@@ -114,6 +118,30 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
                 novoChat();
             }
         };
+
+        function verificarChaveInicial() {
+            if (!GROQ_API_KEY || !GROQ_API_KEY.startsWith("gsk_")) {
+                const nova = prompt("🔑 Insira sua chave da Groq (começa com gsk_):");
+                if (nova && nova.trim().startsWith("gsk_")) {
+                    GROQ_API_KEY = nova.trim();
+                    localStorage.setItem('codecraft_groq_key', GROQ_API_KEY);
+                    alert("✅ Chave salva com sucesso!");
+                } else {
+                    alert("⚠️ Você precisa inserir uma chave válida da Groq para a IA responder.");
+                }
+            }
+        }
+
+        function configurarChave() {
+            fecharMenu();
+            const atual = GROQ_API_KEY || "";
+            const nova = prompt("🔑 Digite ou cole sua nova chave da Groq (gsk_...):", atual);
+            if (nova !== null) {
+                GROQ_API_KEY = nova.trim();
+                localStorage.setItem('codecraft_groq_key', GROQ_API_KEY);
+                alert("✅ Chave da Groq atualizada com sucesso!");
+            }
+        }
 
         function ajustarAltura(el) {
             el.style.height = 'auto';
@@ -139,7 +167,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
             if (chatBox) {
                 chatBox.innerHTML = `
                     <div class="message ai-message">
-                        Salve, Heitor! CodeCraft rodando na Groq com chave nova. Manda o exploit para o Delta!
+                        Salve, Heitor! CodeCraft pronto. Manda o exploit para o Delta!
                     </div>
                 `;
             }
@@ -265,6 +293,12 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
         }
 
         async function enviarMensagem() {
+            if (!GROQ_API_KEY || !GROQ_API_KEY.startsWith("gsk_")) {
+                alert("⚠️ Insira uma chave da Groq válida clicando no ícone de chave (🔑) lá em cima.");
+                configurarChave();
+                return;
+            }
+
             if (!userInput) return;
             const textoUsuario = userInput.value.trim();
             if (textoUsuario === "") return;
