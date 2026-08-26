@@ -1,327 +1,398 @@
-const parte1 = "AQ.Ab8RN6Lsonh";
-const parte2 = "k347uSOBJmzQlPtNioPPiwr2QDmBRhJ0ZhLG_Hw";
-const API_KEY = parte1 + parte2;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCraft AI - OpenRouter Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; height: 100vh; }
+        
+        header { background: #161b22; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; z-index: 10; }
+        h1 { font-size: 16px; color: #58a6ff; font-weight: bold; }
+        .menu-btn { background: none; border: none; color: #c9d1d9; font-size: 22px; cursor: pointer; padding: 0 5px; }
 
-const chatBox = document.getElementById("chat-box");
-const userInput = document.getElementById("user-input");
+        #chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 85%; padding: 12px; border-radius: 8px; line-height: 1.4; font-size: 14px; word-break: break-word; }
+        .user-message { background: #1f6feb; color: white; align-self: flex-end; }
+        .ai-message { background: #21262d; color: #c9d1d9; align-self: flex-start; border: 1px solid #30363d; }
+        .error-message { background: #4e1515; color: #ff7b72; align-self: center; border: 1px solid #881f1f; text-align: center; }
 
-let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum histórico anterior.";
-let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
+        .input-area { background: #161b22; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #30363d; align-items: flex-end; }
+        textarea { flex: 1; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; resize: none; max-height: 120px; font-family: inherit; line-height: 1.4; }
+        textarea::placeholder { color: #8b949e; }
+        button.send-btn { background: #238636; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; height: 42px; font-size: 14px; flex-shrink: 0; }
+        button.send-btn:active { background: #2ea043; }
 
-const atualizarRegras = () => {
-    return `Você é uma IA sênior especialista em engenharia reversa, Roblox Studio e Luau, focada em criar scripts altamente otimizados para EXECUTORES MOBILE (como o Delta).
+        pre { background: #010409; padding: 10px; border-radius: 6px; margin-top: 8px; overflow-x: auto; position: relative; }
+        code { font-family: monospace; font-size: 13px; color: #79c0ff; }
+        .copy-btn { position: absolute; top: 5px; right: 5px; background: #30363d; color: white; border: none; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
 
-PROCESSO OBRIGATÓRIO DE PENSAMENTO (Pense estrategicamente antes de gerar o código):
-1. ANÁLISE DE SEGURANÇA E SERVIDOR: Antes de escrever qualquer script, analise barreiras de autoridade de servidor, anti-cheats básicos ou grupos de colisão do jogo.
-2. ENGENHARIA DEFENSIVA RIGOROSA: Nunca assuma que objetos, partes do avatar ou serviços existem. Todo script deve obrigatoriamente usar verificações de nulidade defensivas (ex: 'if character and humanoid then') e blocos 'pcall()' para evitar que erros quebrem o executor no celular.
-3. OTIMIZAÇÃO MOBILE: Em loops contínuos (como RunService.Stepped), garanta varreduras leves, condicionais inteligentes (ex: verificar se v.CanCollide é verdadeiro antes de alterar) e otimizadas para não causar travamentos ou queda de FPS.
-4. PADRÃO DE QUALIDADE: Forneça o código inteiro, robusto, funcional, limpo e estruturado do início ao fim, sem usar atalhos ou reticências (...).
+        .sidebar { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: #161b22; transition: 0.3s; z-index: 100; border-right: 1px solid #30363d; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
+        .history-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .history-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #8b949e; background: #0d1117; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+        .history-item.active { color: white; background: #21262d; border: 1px solid #30363d; }
+        .history-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 5px; }
+        .action-btns { display: flex; gap: 4px; }
+        .rename-btn { background: none; border: none; cursor: pointer; font-size: 13px; padding: 2px; color: #8b949e; }
+        .rename-btn:hover { color: white; }
 
-REGRAS GERAIS:
-5. NUNCA envie blocos de código a menos que o usuário PEÇA EXPLICITAMENTE um script. Se ele disser apenas 'Oi', responda naturalmente sem código.
-6. INSTRUÇÕES E MEMÓRIA PERSONALIZADA DO DONO: ${customMemory}
-7. MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}
-8. Seja direto, amigável e especialista técnico em Luau, Java e JSON.`;
-};
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 99; }
+        .overlay.active { display: block; }
+    </style>
+</head>
+<body>
 
-let sessoes = [];
-try {
-    sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
-} catch (e) {
-    sessoes = [];
-}
+    <div class="overlay" id="overlay" onclick="fecharMenu()"></div>
 
-let chatAtualId = localStorage.getItem('codecraft_atual_id') || null;
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 style="font-size: 15px; color: #c9d1d9;">Seus Chats</h3>
+            <button class="menu-btn" onclick="fecharMenu()" style="font-size: 18px;">✕</button>
+        </div>
+        <div style="padding: 10px;">
+            <button onclick="novoChat()" style="width: 100%; background: #238636; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">+ Novo Chat</button>
+        </div>
+        <div class="history-list" id="history-list"></div>
+    </div>
 
-window.onload = function() {
-    try {
-        carregarListaChats();
-        if (sessoes.length === 0) {
-            novoChat();
-        } else if (chatAtualId) {
-            carregarChat(chatAtualId);
-        } else {
-            novoChat();
+    <header>
+        <button class="menu-btn" onclick="abrirMenu()">☰</button>
+        <h1>CodeCraft AI (OpenRouter)</h1>
+        <div style="display: flex; gap: 4px;">
+            <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 16px;">🔑</button>
+            <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 16px;">🧠</button>
+        </div>
+    </header>
+
+    <div id="chat-box"></div>
+
+    <div class="input-area">
+        <textarea id="user-input" placeholder="Digite seu código ou dúvida... (pule linhas livremente)" rows="1" oninput="ajustarAltura(this)"></textarea>
+        <button class="send-btn" onclick="enviarMensagem()">Enviar</button>
+    </div>
+
+    <script>
+        // Chave do OpenRouter salva com segurança no navegador
+        let OR_API_KEY = localStorage.getItem('codecraft_or_key') || "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";
+        localStorage.setItem('codecraft_or_key', OR_API_KEY);
+
+        // Usando um modelo de ponta excelente para programação via OpenRouter
+        const OR_MODEL = "deepseek/deepseek-chat";
+
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+
+        let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
+
+        const obterSystemPrompt = () => {
+            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e engenharia reversa para exploits mobile (Delta). Crie códigos limpos, completos e funcionais. Extras: ${customMemory}`;
+        };
+
+        let sessoes = [];
+        try {
+            sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+        } catch (e) {
+            sessoes = [];
         }
-    } catch (err) {
-        console.error("Erro ao iniciar:", err);
-        novoChat();
-    }
-};
 
-function abrirMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    if (sidebar) sidebar.classList.add('open');
-    if (overlay) overlay.classList.add('active');
-}
+        let chatAtualId = localStorage.getItem('codecraft_atual_id') || null;
 
-function fecharMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    if (sidebar) sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('active');
-}
-
-function novoChat() {
-    const novoId = 'chat_' + Date.now();
-    const novaSessao = {
-        id: novoId,
-        titulo: 'Novo Chat',
-        mensagens: []
-    };
-    sessoes.unshift(novaSessao);
-    chatAtualId = novoId;
-    salvarDados();
-    
-    if (chatBox) {
-        chatBox.innerHTML = `
-            <div class="message ai-message">
-                Olá, Heitor! CodeCraft pronto para o Delta Mobile. O que vamos programar hoje?
-            </div>
-        `;
-    }
-    carregarListaChats();
-    fecharMenu();
-}
-
-function configurarCerebro() {
-    fecharMenu();
-    const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
-    const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA:", promptAtual);
-    
-    if (novaInstrucao !== null) {
-        customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
-        localStorage.setItem('codecraft_custom_memory', customMemory);
-        alert("✅ Cérebro atualizado com sucesso!");
-    }
-}
-
-function renomearChat(event, id) {
-    event.stopPropagation();
-    const sessao = sessoes.find(s => s.id === id);
-    if (!sessao) return;
-
-    const novoNome = prompt("Digite o novo nome para este chat:", sessao.titulo);
-    if (novoNome && novoNome.trim() !== "") {
-        sessao.titulo = novoNome.trim();
-        salvarDados();
-        carregarListaChats();
-    }
-}
-
-function salvarDados() {
-    try {
-        localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
-        localStorage.setItem('codecraft_atual_id', chatAtualId);
-        let resumo = sessoes.map(s => `[Chat: ${s.titulo}]`).join(' | ');
-        globalMemory = resumo;
-        localStorage.setItem('codecraft_global_memory', globalMemory);
-    } catch (e) {
-        console.error("Erro ao salvar dados:", e);
-    }
-}
-
-function carregarListaChats() {
-    const listDiv = document.getElementById('history-list');
-    if (!listDiv) return;
-    listDiv.innerHTML = '';
-    
-    sessoes.forEach(sessao => {
-        const item = document.createElement('div');
-        item.className = `history-item ${sessao.id === chatAtualId ? 'active' : ''}`;
-        
-        const spanTexto = document.createElement('span');
-        spanTexto.className = 'history-text';
-        spanTexto.innerText = sessao.titulo;
-        
-        const btnRenomear = document.createElement('button');
-        btnRenomear.className = 'rename-btn';
-        btnRenomear.innerHTML = '✏️';
-        btnRenomear.title = 'Renomear chat';
-        btnRenomear.onclick = (e) => renomearChat(e, sessao.id);
-
-        item.appendChild(spanTexto);
-        item.appendChild(btnRenomear);
-        item.onclick = () => carregarChat(sessao.id);
-        
-        listDiv.appendChild(item);
-    });
-}
-
-function carregarChat(id) {
-    chatAtualId = id;
-    salvarDados();
-    carregarListaChats();
-    
-    const sessao = sessoes.find(s => s.id === id);
-    if (!sessao) return;
-    
-    if (chatBox) chatBox.innerHTML = '';
-    
-    if (sessao.mensagens.length === 0) {
-        if (chatBox) {
-            chatBox.innerHTML = `
-                <div class="message ai-message">
-                    Chat carregado. Como posso ajudar com seus scripts?
-                </div>
-            `;
-        }
-    } else {
-        sessao.mensagens.forEach(msg => {
-            renderizarMensagemNaTelaInstantanea(msg.texto, msg.classe);
-        });
-    }
-    fecharMenu();
-}
-
-async function enviarMensagem() {
-    if (!userInput) return;
-    const textoUsuario = userInput.value.trim();
-    if (textoUsuario === "") return;
-
-    renderizarMensagemNaTelaInstantanea(textoUsuario, "user-message");
-    userInput.value = "";
-
-    const sessao = sessoes.find(s => s.id === chatAtualId);
-    if (!sessao) return;
-
-    if (sessao.mensagens.length === 0 && sessao.titulo === 'Novo Chat') {
-        sessao.titulo = textoUsuario.substring(0, 22) + (textoUsuario.length > 22 ? '...' : '');
-        carregarListaChats();
-    }
-
-    sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
-    salvarDados();
-
-    const loadingId = adicionarMensagemGenerica("Pensando...", "ai-message");
-
-    let historicoFormatado = [];
-    sessao.mensagens.forEach(m => {
-        historicoFormatado.push({
-            role: m.classe === "user-message" ? "user" : "model",
-            parts: [{ text: m.texto }]
-        });
-    });
-
-    try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                systemInstruction: { parts: [{ text: atualizarRegras() }] },
-                contents: historicoFormatado,
-                generationConfig: {
-                    maxOutputTokens: 8192,
-                    temperature: 0.7
+        window.onload = function() {
+            try {
+                carregarListaChats();
+                if (sessoes.length === 0 || !chatAtualId) {
+                    novoChat();
+                } else {
+                    carregarChat(chatAtualId);
                 }
-            })
-        });
+            } catch (err) {
+                console.error("Erro ao iniciar:", err);
+                novoChat();
+            }
+        };
 
-        const dados = await resposta.json();
-        const loadEl = document.getElementById(loadingId);
-        if (loadEl) loadEl.remove();
+        function configurarChave() {
+            fecharMenu();
+            const atual = OR_API_KEY || "";
+            const nova = prompt("🔑 Digite ou cole sua nova chave do OpenRouter (sk-or-v1-...):", atual);
+            if (nova !== null && nova.trim() !== "") {
+                OR_API_KEY = nova.trim();
+                localStorage.setItem('codecraft_or_key', OR_API_KEY);
+                alert("✅ Chave do OpenRouter atualizada com sucesso!");
+            }
+        }
 
-        if (dados.candidates && dados.candidates.length > 0) {
-            const textoIA = dados.candidates[0].content.parts[0].text;
-            sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
+        function ajustarAltura(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        function abrirMenu() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function fecharMenu() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function novoChat() {
+            const novoId = 'chat_' + Date.now();
+            sessoes.unshift({ id: novoId, titulo: 'Novo Chat', mensagens: [] });
+            chatAtualId = novoId;
             salvarDados();
             
-            await renderizarComEfeitoDigitacao(textoIA);
-
-        } else if (dados.error) {
-            renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
-        } else {
-            renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
-        }
-
-    } catch (erro) {
-        const loadEl = document.getElementById(loadingId);
-        if (loadEl) loadEl.remove();
-        renderizarMensagemNaTelaInstantanea("❌ Erro de conexão: " + erro.message, "ai-message");
-    }
-}
-
-function adicionarMensagemGenerica(texto, classe) {
-    const div = document.createElement("div");
-    div.className = `message ${classe}`;
-    div.innerHTML = texto.replace(/\n/g, '<br>');
-    const idUnico = "msg-" + Date.now();
-    div.id = idUnico;
-    if (chatBox) {
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    return idUnico;
-}
-
-function renderizarMensagemNaTelaInstantanea(texto, classe) {
-    const div = document.createElement("div");
-    div.className = `message ${classe}`;
-    
-    if (classe === "ai-message" && !texto.startsWith("❌")) {
-        if (typeof marked !== "undefined") {
-            div.innerHTML = marked.parse(texto);
-            adicionarBotoesCopiar(div);
-        } else {
-            div.innerHTML = texto.replace(/\n/g, '<br>'); 
-        }
-    } else {
-        div.innerHTML = texto.replace(/\n/g, '<br>'); 
-    }
-    
-    if (chatBox) {
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-}
-
-async function renderizarComEfeitoDigitacao(textoCompleto) {
-    const div = document.createElement("div");
-    div.className = "message ai-message";
-    if (chatBox) {
-        chatBox.appendChild(div);
-    }
-
-    let i = 0;
-    const velocidade = 6; 
-    
-    return new Promise((resolve) => {
-        const timer = setInterval(() => {
-            if (i < textoCompleto.length) {
-                div.textContent += textoCompleto.substring(i, i + 4);
-                i += 4;
-                if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-            } else {
-                clearInterval(timer);
-                if (typeof marked !== "undefined") {
-                    div.innerHTML = marked.parse(textoCompleto);
-                    adicionarBotoesCopiar(div);
-                } else {
-                    div.innerHTML = textoCompleto.replace(/\n/g, '<br>');
-                }
-                if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-                resolve();
+            if (chatBox) {
+                chatBox.innerHTML = `
+                    <div class="message ai-message">
+                        Salve, Heitor! CodeCraft com OpenRouter (DeepSeek) ativo. Manda a braba para o Delta!
+                    </div>
+                `;
             }
-        }, velocidade);
-    });
-}
+            carregarListaChats();
+            fecharMenu();
+        }
 
-function adicionarBotoesCopiar(containerDiv) {
-    const blocosDeCodigo = containerDiv.querySelectorAll("pre"); 
-    blocosDeCodigo.forEach((bloco) => {
-        if (bloco.querySelector(".copy-btn")) return;
-        const botaoCopiar = document.createElement("button");
-        botaoCopiar.className = "copy-btn";
-        botaoCopiar.innerHTML = "📋 Copiar";
-        
-        botaoCopiar.onclick = function() {
-            const codigo = bloco.querySelector("code").innerText;
-            navigator.clipboard.writeText(codigo); 
-            botaoCopiar.innerHTML = "✅ Copiado!"; 
-            setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); 
-        };
-        
-        bloco.appendChild(botaoCopiar); 
-    });
-}
+        function configurarCerebro() {
+            fecharMenu();
+            const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
+            const novaInstrucao = prompt("🧠 Configurar Cérebro da IA:", promptAtual);
+            
+            if (novaInstrucao !== null) {
+                customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
+                localStorage.setItem('codecraft_custom_memory', customMemory);
+                alert("✅ Cérebro atualizado!");
+            }
+        }
+
+        function renomearChat(event, id) {
+            event.stopPropagation();
+            const sessao = sessoes.find(s => s.id === id);
+            if (!sessao) return;
+
+            const novoNome = prompt("Digite o novo nome para este chat:", sessao.titulo);
+            if (novoNome && novoNome.trim() !== "") {
+                sessao.titulo = novoNome.trim();
+                salvarDados();
+                carregarListaChats();
+            }
+        }
+
+        function apagarChat(event, id) {
+            event.stopPropagation();
+            if (!confirm("Tem certeza que deseja apagar este chat?")) return;
+
+            sessoes = sessoes.filter(s => s.id !== id);
+            if (sessoes.length === 0) {
+                novoChat();
+            } else {
+                if (chatAtualId === id) {
+                    carregarChat(sessoes[0].id);
+                } else {
+                    salvarDados();
+                    carregarListaChats();
+                }
+            }
+        }
+
+        function salvarDados() {
+            try {
+                localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
+                localStorage.setItem('codecraft_atual_id', chatAtualId);
+            } catch (e) {
+                console.error("Erro ao salvar dados:", e);
+            }
+        }
+
+        function carregarListaChats() {
+            const listDiv = document.getElementById('history-list');
+            if (!listDiv) return;
+            listDiv.innerHTML = '';
+            
+            sessoes.forEach(sessao => {
+                const item = document.createElement('div');
+                item.className = `history-item ${sessao.id === chatAtualId ? 'active' : ''}`;
+                
+                const spanTexto = document.createElement('span');
+                spanTexto.className = 'history-text';
+                spanTexto.innerText = sessao.titulo;
+                
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'action-btns';
+
+                const btnRenomear = document.createElement('button');
+                btnRenomear.className = 'rename-btn';
+                btnRenomear.innerHTML = '✏️';
+                btnRenomear.onclick = (e) => renomearChat(e, sessao.id);
+
+                const btnApagar = document.createElement('button');
+                btnApagar.className = 'rename-btn';
+                btnApagar.innerHTML = '🗑️';
+                btnApagar.onclick = (e) => apagarChat(e, sessao.id);
+
+                btnContainer.appendChild(btnRenomear);
+                btnContainer.appendChild(btnApagar);
+
+                item.appendChild(spanTexto);
+                item.appendChild(btnContainer);
+                item.onclick = () => carregarChat(sessao.id);
+                
+                listDiv.appendChild(item);
+            });
+        }
+
+        function carregarChat(id) {
+            chatAtualId = id;
+            salvarDados();
+            carregarListaChats();
+            
+            const sessao = sessoes.find(s => s.id === id);
+            if (!sessao) return;
+            
+            if (chatBox) chatBox.innerHTML = '';
+            
+            if (sessao.mensagens.length === 0) {
+                if (chatBox) {
+                    chatBox.innerHTML = `
+                        <div class="message ai-message">
+                            Chat carregado. Manda a braba!
+                        </div>
+                    `;
+                }
+            } else {
+                sessao.mensagens.forEach(msg => {
+                    renderizarMensagem(msg.texto, msg.classe);
+                });
+            }
+            fecharMenu();
+        }
+
+        async function enviarMensagem() {
+            if (!OR_API_KEY || !OR_API_KEY.startsWith("sk-or-")) {
+                alert("⚠️ Insira uma chave do OpenRouter válida.");
+                configurarChave();
+                return;
+            }
+
+            if (!userInput) return;
+            const textoUsuario = userInput.value.trim();
+            if (textoUsuario === "") return;
+
+            renderizarMensagem(textoUsuario, "user-message");
+            userInput.value = "";
+            userInput.style.height = 'auto';
+
+            const sessao = sessoes.find(s => s.id === chatAtualId);
+            if (!sessao) return;
+
+            if (sessao.mensagens.length === 0 && sessao.titulo === 'Novo Chat') {
+                sessao.titulo = textoUsuario.substring(0, 22) + (textoUsuario.length > 22 ? '...' : '');
+                carregarListaChats();
+            }
+
+            sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
+            salvarDados();
+
+            const loadingId = "load_" + Date.now();
+            const loadDiv = document.createElement("div");
+            loadDiv.className = "message ai-message";
+            loadDiv.id = loadingId;
+            loadDiv.innerText = "IA pensando...";
+            chatBox.appendChild(loadDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let mensagensOpenRouter = [
+                { role: "system", content: obterSystemPrompt() }
+            ];
+            
+            const historicoRecente = sessao.mensagens.slice(-8);
+            historicoRecente.forEach(m => {
+                mensagensOpenRouter.push({
+                    role: m.classe === "user-message" ? "user" : "assistant",
+                    content: m.texto
+                });
+            });
+
+            try {
+                const resposta = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${OR_API_KEY}`,
+                        "HTTP-Referer": window.location.origin,
+                        "X-Title": "CodeCraft AI"
+                    },
+                    body: JSON.stringify({
+                        model: OR_MODEL,
+                        messages: mensagensOpenRouter,
+                        temperature: 0.7,
+                        max_tokens: 4000
+                    })
+                });
+
+                const dados = await resposta.json();
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.remove();
+
+                if (dados.choices && dados.choices.length > 0) {
+                    const textoIA = dados.choices[0].message.content;
+                    sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
+                    salvarDados();
+                    
+                    renderizarMensagem(textoIA, "ai-message");
+
+                } else if (dados.error) {
+                    renderizarMensagem("❌ Erro do OpenRouter: " + dados.error.message, "error-message");
+                } else {
+                    renderizarMensagem("❌ Erro inesperado na resposta.", "error-message");
+                }
+
+            } catch (erro) {
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.remove();
+                renderizarMensagem("❌ Erro de conexão com o OpenRouter.", "error-message");
+            }
+        }
+
+        function renderizarMensagem(texto, classe) {
+            const div = document.createElement("div");
+            div.className = `message ${classe}`;
+            
+            if (classe === "ai-message" && !texto.startsWith("❌") && !texto.startsWith("⚠️") && typeof marked !== "undefined") {
+                div.innerHTML = marked.parse(texto);
+                adicionarBotoesCopiar(div);
+            } else {
+                div.innerHTML = texto.replace(/\n/g, '<br>'); 
+            }
+            
+            if (chatBox) {
+                chatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        function adicionarBotoesCopiar(containerDiv) {
+            containerDiv.querySelectorAll("pre").forEach((bloco) => {
+                if (bloco.querySelector(".copy-btn")) return;
+                const botaoCopiar = document.createElement("button");
+                botaoCopiar.className = "copy-btn";
+                botaoCopiar.innerHTML = "📋 Copiar";
+                
+                botaoCopiar.onclick = function() {
+                    const codigo = bloco.querySelector("code").innerText;
+                    navigator.clipboard.writeText(codigo); 
+                    botaoCopiar.innerHTML = "✅ Copiado!"; 
+                    setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); 
+                };
+                
+                bloco.appendChild(botaoCopiar); 
+            });
+        }
+    </script>
+</body>
+</html>
