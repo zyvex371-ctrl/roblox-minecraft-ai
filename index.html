@@ -8,26 +8,34 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #161b22; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
-        h1 { font-size: 18px; color: #58a6ff; }
+        
+        header { background: #161b22; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; z-index: 10; }
+        h1 { font-size: 16px; color: #58a6ff; }
         .menu-btn { background: none; border: none; color: #c9d1d9; font-size: 22px; cursor: pointer; }
+
         #chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .message { max-width: 85%; padding: 12px; border-radius: 8px; line-height: 1.4; font-size: 14px; word-break: break-word; }
         .user-message { background: #1f6feb; color: white; align-self: flex-end; }
         .ai-message { background: #21262d; color: #c9d1d9; align-self: flex-start; border: 1px solid #30363d; }
+
         .input-area { background: #161b22; padding: 10px; display: flex; gap: 10px; border-top: 1px solid #30363d; }
         input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
         button.send-btn { background: #238636; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
         pre { background: #010409; padding: 10px; border-radius: 6px; margin-top: 8px; overflow-x: auto; position: relative; }
         code { font-family: monospace; font-size: 13px; color: #79c0ff; }
         .copy-btn { position: absolute; top: 5px; right: 5px; background: #30363d; color: white; border: none; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
+
+        /* Sidebar e Menu Lateral */
         .sidebar { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: #161b22; transition: 0.3s; z-index: 100; border-right: 1px solid #30363d; display: flex; flex-direction: column; }
         .sidebar.open { left: 0; }
-        .sidebar-header { padding: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #30363d; }
-        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .history-item { padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 5px; font-size: 13px; color: #8b949e; background: #0d1117; }
+        .sidebar-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
+        .history-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .history-item { padding: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #8b949e; background: #0d1117; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
         .history-item.active { color: white; background: #21262d; border: 1px solid #30363d; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 99; }
+        .rename-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 99; }
         .overlay.active { display: block; }
     </style>
 </head>
@@ -37,11 +45,11 @@
 
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h3>Seus Chats</h3>
-            <button class="menu-btn" onclick="fecharMenu()">✕</button>
+            <h3 style="font-size: 15px; color: #c9d1d9;">Seus Chats</h3>
+            <button class="menu-btn" onclick="fecharMenu()" style="font-size: 18px;">✕</button>
         </div>
         <div style="padding: 10px;">
-            <button onclick="novoChat()" style="width: 100%; background: #238636; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Novo Chat</button>
+            <button onclick="novoChat()" style="width: 100%; background: #238636; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">+ Novo Chat</button>
         </div>
         <div class="history-list" id="history-list"></div>
     </div>
@@ -49,13 +57,13 @@
     <header>
         <button class="menu-btn" onclick="abrirMenu()">☰</button>
         <h1>CodeCraft AI</h1>
-        <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro">🧠</button>
+        <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 18px;">🧠</button>
     </header>
 
     <div id="chat-box"></div>
 
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="Digite sua dúvida ou pedido de script..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
+        <input type="text" id="user-input" placeholder="Digite sua dúvida ou script..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
         <button class="send-btn" onclick="enviarMensagem()">Enviar</button>
     </div>
 
@@ -67,14 +75,38 @@
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
 
-        let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada.";
-        let sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+        let globalMemory = localStorage.getItem('codecraft_global_memory') || "Nenhum histórico anterior.";
+        let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
+
+        const atualizarRegras = () => {
+            return `Você é uma IA sênior especialista em engenharia reversa, Roblox Studio e Luau, focada em criar scripts altamente otimizados para EXECUTORES MOBILE (como o Delta).
+INSTRUÇÕES E MEMÓRIA PERSONALIZADA DO DONO: ${customMemory}
+MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}`;
+        };
+
+        let sessoes = [];
+        try {
+            sessoes = JSON.parse(localStorage.getItem('codecraft_chats')) || [];
+        } catch (e) {
+            sessoes = [];
+        }
+
         let chatAtualId = localStorage.getItem('codecraft_atual_id') || null;
 
         window.onload = function() {
-            if (sessoes.length === 0) novoChat();
-            else if (chatAtualId) carregarChat(chatAtualId);
-            else novoChat();
+            try {
+                carregarListaChats();
+                if (sessoes.length === 0) {
+                    novoChat();
+                } else if (chatAtualId) {
+                    carregarChat(chatAtualId);
+                } else {
+                    novoChat();
+                }
+            } catch (err) {
+                console.error("Erro ao iniciar:", err);
+                novoChat();
+            }
         };
 
         function abrirMenu() {
@@ -92,36 +124,77 @@
             sessoes.unshift({ id: novoId, titulo: 'Novo Chat', mensagens: [] });
             chatAtualId = novoId;
             salvarDados();
-            chatBox.innerHTML = `<div class="message ai-message">Salve, Heitor! CodeCraft pronto para o Delta Mobile. O que vamos programar hoje?</div>`;
+            
+            if (chatBox) {
+                chatBox.innerHTML = `
+                    <div class="message ai-message">
+                        Olá, Heitor! CodeCraft pronto para o Delta Mobile. O que vamos programar hoje?
+                    </div>
+                `;
+            }
             carregarListaChats();
             fecharMenu();
         }
 
         function configurarCerebro() {
             fecharMenu();
-            const nova = prompt("🧠 Instrução permanente para a IA:", customMemory === "Nenhuma instrução personalizada." ? "" : customMemory);
-            if (nova !== null) {
-                customMemory = nova.trim() || "Nenhuma instrução personalizada.";
+            const promptAtual = customMemory === "Nenhuma instrução personalizada definida." ? "" : customMemory;
+            const novaInstrucao = prompt("🧠 Digite o que você quer gravar permanentemente no cérebro da IA:", promptAtual);
+            
+            if (novaInstrucao !== null) {
+                customMemory = novaInstrucao.trim() || "Nenhuma instrução personalizada definida.";
                 localStorage.setItem('codecraft_custom_memory', customMemory);
-                alert("✅ Cérebro atualizado!");
+                alert("✅ Cérebro atualizado com sucesso!");
+            }
+        }
+
+        function renomearChat(event, id) {
+            event.stopPropagation();
+            const sessao = sessoes.find(s => s.id === id);
+            if (!sessao) return;
+
+            const novoNome = prompt("Digite o novo nome para este chat:", sessao.titulo);
+            if (novoNome && novoNome.trim() !== "") {
+                sessao.titulo = novoNome.trim();
+                salvarDados();
+                carregarListaChats();
             }
         }
 
         function salvarDados() {
-            localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
-            localStorage.setItem('codecraft_atual_id', chatAtualId);
-            carregarListaChats();
+            try {
+                localStorage.setItem('codecraft_chats', JSON.stringify(sessoes));
+                localStorage.setItem('codecraft_atual_id', chatAtualId);
+                globalMemory = sessoes.map(s => `[Chat: ${s.titulo}]`).join(' | ');
+                localStorage.setItem('codecraft_global_memory', globalMemory);
+            } catch (e) {
+                console.error("Erro ao salvar dados:", e);
+            }
         }
 
         function carregarListaChats() {
             const listDiv = document.getElementById('history-list');
             if (!listDiv) return;
             listDiv.innerHTML = '';
-            sessoes.forEach(s => {
+            
+            sessoes.forEach(sessao => {
                 const item = document.createElement('div');
-                item.className = `history-item ${s.id === chatAtualId ? 'active' : ''}`;
-                item.innerText = s.titulo;
-                item.onclick = () => carregarChat(s.id);
+                item.className = `history-item ${sessao.id === chatAtualId ? 'active' : ''}`;
+                
+                const spanTexto = document.createElement('span');
+                spanTexto.className = 'history-text';
+                spanTexto.innerText = sessao.titulo;
+                
+                const btnRenomear = document.createElement('button');
+                btnRenomear.className = 'rename-btn';
+                btnRenomear.innerHTML = '✏️';
+                btnRenomear.title = 'Renomear chat';
+                btnRenomear.onclick = (e) => renomearChat(e, sessao.id);
+
+                item.appendChild(spanTexto);
+                item.appendChild(btnRenomear);
+                item.onclick = () => carregarChat(sessao.id);
+                
                 listDiv.appendChild(item);
             });
         }
@@ -129,108 +202,175 @@
         function carregarChat(id) {
             chatAtualId = id;
             salvarDados();
+            carregarListaChats();
+            
             const sessao = sessoes.find(s => s.id === id);
             if (!sessao) return;
-            chatBox.innerHTML = '';
+            
+            if (chatBox) chatBox.innerHTML = '';
+            
             if (sessao.mensagens.length === 0) {
-                chatBox.innerHTML = `<div class="message ai-message">Chat limpo. Manda a braba!</div>`;
+                if (chatBox) {
+                    chatBox.innerHTML = `
+                        <div class="message ai-message">
+                            Chat carregado. Como posso ajudar com seus scripts?
+                        </div>
+                    `;
+                }
             } else {
-                sessao.mensagens.forEach(m => renderizarMensagem(m.texto, m.classe));
+                sessao.mensagens.forEach(msg => {
+                    renderizarMensagemNaTelaInstantanea(msg.texto, msg.classe);
+                });
             }
             fecharMenu();
         }
 
-        function renderizarMensagem(texto, classe) {
-            const div = document.createElement("div");
-            div.className = `message ${classe}`;
-            if (classe === "ai-message" && typeof marked !== "undefined") {
-                div.innerHTML = marked.parse(texto);
-                adicionarBotoesCopiar(div);
-            } else {
-                div.innerHTML = texto.replace(/\n/g, '<br>');
-            }
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function adicionarBotoesCopiar(container) {
-            container.querySelectorAll("pre").forEach(bloco => {
-                if (bloco.querySelector(".copy-btn")) return;
-                const btn = document.createElement("button");
-                btn.className = "copy-btn";
-                btn.innerHTML = "📋 Copiar";
-                btn.onclick = () => {
-                    navigator.clipboard.writeText(bloco.querySelector("code").innerText);
-                    btn.innerHTML = "✅ Copiado!";
-                    setTimeout(() => btn.innerHTML = "📋 Copiar", 2000);
-                };
-                bloco.appendChild(btn);
-            });
-        }
-
         async function enviarMensagem() {
-            const txt = userInput.value.trim();
-            if (!txt) return;
+            if (!userInput) return;
+            const textoUsuario = userInput.value.trim();
+            if (textoUsuario === "") return;
+
+            renderizarMensagemNaTelaInstantanea(textoUsuario, "user-message");
             userInput.value = "";
 
             const sessao = sessoes.find(s => s.id === chatAtualId);
             if (!sessao) return;
 
             if (sessao.mensagens.length === 0 && sessao.titulo === 'Novo Chat') {
-                sessao.titulo = txt.substring(0, 20) + (txt.length > 20 ? '...' : '');
+                sessao.titulo = textoUsuario.substring(0, 22) + (textoUsuario.length > 22 ? '...' : '');
+                carregarListaChats();
             }
 
-            sessao.mensagens.push({ texto: txt, classe: "user-message" });
-            renderizarMensagem(txt, "user-message");
+            sessao.mensagens.push({ texto: textoUsuario, classe: "user-message" });
             salvarDados();
 
-            // Mensagem temporária de carregamento segura
-            const loadId = "load_" + Date.now();
-            const loadDiv = document.createElement("div");
-            loadDiv.className = "message ai-message";
-            loadDiv.id = loadId;
-            loadDiv.innerText = "Pensando...";
-            chatBox.appendChild(loadDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            const loadingId = adicionarMensagemGenerica("Pensando...", "ai-message");
 
-            let historico = sessao.mensagens.map(m => ({
-                role: m.classe === "user-message" ? "user" : "model",
-                parts: [{ text: m.texto }]
-            }));
+            let historicoFormatado = [];
+            sessao.mensagens.forEach(m => {
+                historicoFormatado.push({
+                    role: m.classe === "user-message" ? "user" : "model",
+                    parts: [{ text: m.texto }]
+                });
+            });
 
             try {
                 const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        systemInstruction: { parts: [{ text: `Você é especialista em Luau e Roblox Studio para executores mobile como o Delta. Instruções: ${customMemory}` }] },
-                        contents: historico,
-                        generationConfig: { maxOutputTokens: 8192, temperature: 0.7 }
+                        systemInstruction: { parts: [{ text: atualizarRegras() }] },
+                        contents: historicoFormatado,
+                        generationConfig: {
+                            maxOutputTokens: 8192,
+                            temperature: 0.7
+                        }
                     })
                 });
 
                 const dados = await resposta.json();
-                
-                // Remove o "Pensando..." com segurança
-                const el = document.getElementById(loadId);
-                if (el) el.remove();
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.remove();
 
                 if (dados.candidates && dados.candidates.length > 0) {
-                    const respostaIA = dados.candidates[0].content.parts[0].text;
-                    sessao.mensagens.push({ texto: respostaIA, classe: "ai-message" });
-                    renderizarMensagem(respostaIA, "ai-message");
+                    const textoIA = dados.candidates[0].content.parts[0].text;
+                    sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
                     salvarDados();
+                    
+                    await renderizarComEfeitoDigitacao(textoIA);
+
                 } else if (dados.error) {
-                    renderizarMensagem("❌ Erro da API: " + dados.error.message, "ai-message");
+                    renderizarMensagemNaTelaInstantanea("❌ Erro do Google: " + dados.error.message, "ai-message");
                 } else {
-                    renderizarMensagem("❌ Erro na resposta do servidor.", "ai-message");
+                    renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
                 }
 
-            } catch (err) {
-                const el = document.getElementById(loadId);
-                if (el) el.remove();
-                renderizarMensagem("❌ Erro de conexão: " + err.message, "ai-message");
+            } catch (erro) {
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.remove();
+                renderizarMensagemNaTelaInstantanea("❌ Erro de conexão: " + erro.message, "ai-message");
             }
+        }
+
+        function adicionarMensagemGenerica(texto, classe) {
+            const div = document.createElement("div");
+            div.className = `message ${classe}`;
+            div.innerHTML = texto.replace(/\n/g, '<br>');
+            const idUnico = "msg-" + Date.now();
+            div.id = idUnico;
+            if (chatBox) {
+                chatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+            return idUnico;
+        }
+
+        function renderizarMensagemNaTelaInstantanea(texto, classe) {
+            const div = document.createElement("div");
+            div.className = `message ${classe}`;
+            
+            if (classe === "ai-message" && !texto.startsWith("❌")) {
+                if (typeof marked !== "undefined") {
+                    div.innerHTML = marked.parse(texto);
+                    adicionarBotoesCopiar(div);
+                } else {
+                    div.innerHTML = texto.replace(/\n/g, '<br>'); 
+                }
+            } else {
+                div.innerHTML = texto.replace(/\n/g, '<br>'); 
+            }
+            
+            if (chatBox) {
+                chatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        async function renderizarComEfeitoDigitacao(textoCompleto) {
+            const div = document.createElement("div");
+            div.className = "message ai-message";
+            if (chatBox) chatBox.appendChild(div);
+
+            let i = 0;
+            const velocidade = 6; 
+            
+            return new Promise((resolve) => {
+                const timer = setInterval(() => {
+                    if (i < textoCompleto.length) {
+                        div.textContent += textoCompleto.substring(i, i + 4);
+                        i += 4;
+                        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                    } else {
+                        clearInterval(timer);
+                        if (typeof marked !== "undefined") {
+                            div.innerHTML = marked.parse(textoCompleto);
+                            adicionarBotoesCopiar(div);
+                        } else {
+                            div.innerHTML = textoCompleto.replace(/\n/g, '<br>');
+                        }
+                        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                        resolve();
+                    }
+                }, velocidade);
+            });
+        }
+
+        function adicionarBotoesCopiar(containerDiv) {
+            containerDiv.querySelectorAll("pre").forEach((bloco) => {
+                if (bloco.querySelector(".copy-btn")) return;
+                const botaoCopiar = document.createElement("button");
+                botaoCopiar.className = "copy-btn";
+                botaoCopiar.innerHTML = "📋 Copiar";
+                
+                botaoCopiar.onclick = function() {
+                    const codigo = bloco.querySelector("code").innerText;
+                    navigator.clipboard.writeText(codigo); 
+                    botaoCopiar.innerHTML = "✅ Copiado!"; 
+                    setTimeout(() => { botaoCopiar.innerHTML = "📋 Copiar"; }, 2000); 
+                };
+                
+                bloco.appendChild(botaoCopiar); 
+            });
         }
     </script>
 </body>
