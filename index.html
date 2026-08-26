@@ -78,14 +78,13 @@
     </div>
 
     <script>
-        // Chave e Modelo fixos e seguros salvos localmente
         let GROQ_API_KEY = localStorage.getItem('codecraft_groq_key') || "";
-        const GROQ_MODEL = "llama-3.1-8b-instant"; // Modelo leve e oficial da Groq
+        const GROQ_MODEL = "llama-3.1-8b-instant";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
 
-        let customMemory = localStorage.getItem('codecraft_custom_memory'] || "Nenhuma instrução personalizada definida.";
+        let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
         const obterSystemPrompt = () => {
             return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e exploits para o Delta mobile. Crie códigos completos e funcionais. Extras: ${customMemory}`;
@@ -326,7 +325,6 @@
                 { role: "system", content: obterSystemPrompt() }
             ];
             
-            // Pega apenas as últimas 6 mensagens para economizar tokens e evitar limite de TPM
             const historicoRecente = sessao.mensagens.slice(-6);
             historicoRecente.forEach(m => {
                 mensagensGroq.push({
@@ -357,7 +355,7 @@
                 if (dados.choices && dados.choices.length > 0) {
                     const textoIA = dados.choices[0].message.content;
                     sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
-                    salvarDialogo = salvarDados();
+                    salvarDados();
                     
                     renderizarMensagem(textoIA, "ai-message");
 
