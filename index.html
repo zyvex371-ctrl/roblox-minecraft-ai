@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeCraft AI - Gemini Edition</title>
+    <title>CodeCraft AI - OpenRouter Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -61,7 +61,7 @@
 
     <header>
         <button class="menu-btn" onclick="abrirMenu()">☰</button>
-        <h1>CodeCraft AI (Gemini)</h1>
+        <h1>CodeCraft AI (OpenRouter)</h1>
         <div style="display: flex; gap: 4px;">
             <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 16px;">🔑</button>
             <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 16px;">🧠</button>
@@ -76,9 +76,11 @@
     </div>
 
     <script>
-        let GEMINI_API_KEY = localStorage.getItem('codecraft_gemini_key') || "";
-        // Usando o modelo flash oficial de alta velocidade e gratuito do Google
-        const GEMINI_MODEL = "gemini-2.5-flash";
+        let OR_API_KEY = localStorage.getItem('codecraft_or_key') || "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";
+        localStorage.setItem('codecraft_or_key', OR_API_KEY);
+
+        // Roteador automático de modelos gratuitos do OpenRouter
+        const OR_MODEL = "openrouter/free";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -86,7 +88,7 @@
         let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
         const obterSystemPrompt = () => {
-            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e engenharia reversa para exploits mobile (Delta). Crie códigos limpos e funcionais. Extras: ${customMemory}`;
+            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e engenharia reversa para exploits mobile (Delta). Crie códigos limpos, completos e funcionais. Extras: ${customMemory}`;
         };
 
         let sessoes = [];
@@ -100,7 +102,6 @@
 
         window.onload = function() {
             try {
-                verificarChaveInicial();
                 carregarListaChats();
                 if (sessoes.length === 0 || !chatAtualId) {
                     novoChat();
@@ -113,27 +114,14 @@
             }
         };
 
-        function verificarChaveInicial() {
-            if (!GEMINI_API_KEY) {
-                const nova = prompt("🔑 Insira sua chave da API do Google AI Studio (Gemini):");
-                if (nova && nova.trim() !== "") {
-                    GEMINI_API_KEY = nova.trim();
-                    localStorage.setItem('codecraft_gemini_key', GEMINI_API_KEY);
-                    alert("✅ Chave do Gemini salva com sucesso!");
-                } else {
-                    alert("⚠️ Você precisa inserir uma chave válida do Gemini para a IA responder.");
-                }
-            }
-        }
-
         function configurarChave() {
             fecharMenu();
-            const atual = GEMINI_API_KEY || "";
-            const nova = prompt("🔑 Digite ou cole sua nova chave do Google AI Studio:", atual);
+            const atual = OR_API_KEY || "";
+            const nova = prompt("🔑 Digite ou cole sua nova chave do OpenRouter (sk-or-v1-...):", atual);
             if (nova !== null && nova.trim() !== "") {
-                GEMINI_API_KEY = nova.trim();
-                localStorage.setItem('codecraft_gemini_key', GEMINI_API_KEY);
-                alert("✅ Chave do Gemini atualizada com sucesso!");
+                OR_API_KEY = nova.trim();
+                localStorage.setItem('codecraft_or_key', OR_API_KEY);
+                alert("✅ Chave do OpenRouter atualizada com sucesso!");
             }
         }
 
@@ -161,7 +149,7 @@
             if (chatBox) {
                 chatBox.innerHTML = `
                     <div class="message ai-message">
-                        Salve, Heitor! CodeCraft com Gemini 2.5 Flash ativo. Manda a braba para o Delta!
+                        Salve, Heitor! CodeCraft com OpenRouter Free ativo. Manda a braba para o Delta!
                     </div>
                 `;
             }
@@ -284,8 +272,8 @@
         }
 
         async function enviarMensagem() {
-            if (!GEMINI_API_KEY) {
-                alert("⚠️ Insira uma chave do Gemini válida clicando no ícone de chave (🔑).");
+            if (!OR_API_KEY || !OR_API_KEY.startsWith("sk-or-")) {
+                alert("⚠️ Insira uma chave do OpenRouter válida.");
                 configurarChave();
                 return;
             }
@@ -313,53 +301,52 @@
             const loadDiv = document.createElement("div");
             loadDiv.className = "message ai-message";
             loadDiv.id = loadingId;
-            loadDiv.innerText = "Gemini pensando...";
+            loadDiv.innerText = "IA pensando...";
             chatBox.appendChild(loadDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Formato de histórico compatível com a API v1beta do Gemini
-            let contentsArray = [];
+            let mensagensOpenRouter = [
+                { role: "system", content: obterSystemPrompt() }
+            ];
             
-            // Adiciona instrução de sistema como parte inicial do contexto para o Gemini
-            contentsArray.push({
-                role: "user",
-                parts: [{ text: "INSTRUÇÃO DO SISTEMA: " + obterSystemPrompt() }]
-            });
-            contentsArray.push({
-                role: "model",
-                parts: [{ text: "Entendido. Pronto para executar." }]
-            });
-
-            const historicoRecente = sessao.mensagens.slice(-10);
+            const historicoRecente = sessao.mensagens.slice(-8);
             historicoRecente.forEach(m => {
-                contentsArray.push({
-                    role: m.classe === "user-message" ? "user" : "model",
-                    parts: [{ text: m.texto }]
+                mensagensOpenRouter.push({
+                    role: m.classe === "user-message" ? "user" : "assistant",
+                    content: m.texto
                 });
             });
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-                
-                const resposta = await fetch(url, {
+                const resposta = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: contentsArray })
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${OR_API_KEY}`,
+                        "HTTP-Referer": window.location.origin,
+                        "X-Title": "CodeCraft AI"
+                    },
+                    body: JSON.stringify({
+                        model: OR_MODEL,
+                        messages: mensagensOpenRouter,
+                        temperature: 0.7,
+                        max_tokens: 2000
+                    })
                 });
 
                 const dados = await resposta.json();
                 const loadEl = document.getElementById(loadingId);
                 if (loadEl) loadEl.remove();
 
-                if (dados.candidates && dados.candidates.length > 0) {
-                    const textoIA = dados.candidates[0].content.parts[0].text;
+                if (dados.choices && dados.choices.length > 0) {
+                    const textoIA = dados.choices[0].message.content;
                     sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
                     salvarDados();
                     
                     renderizarMensagem(textoIA, "ai-message");
 
                 } else if (dados.error) {
-                    renderizarMensagem("❌ Erro do Gemini: " + dados.error.message, "error-message");
+                    renderizarMensagem("❌ Erro do OpenRouter: " + dados.error.message, "error-message");
                 } else {
                     renderizarMensagem("❌ Erro inesperado na resposta.", "error-message");
                 }
@@ -367,7 +354,7 @@
             } catch (erro) {
                 const loadEl = document.getElementById(loadingId);
                 if (loadEl) loadEl.remove();
-                renderizarMensagem("❌ Erro de conexão com a API do Gemini.", "error-message");
+                renderizarMensagem("❌ Erro de conexão com o OpenRouter.", "error-message");
             }
         }
 
