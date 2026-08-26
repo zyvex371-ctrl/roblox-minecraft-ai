@@ -78,7 +78,6 @@
     </div>
 
     <script>
-        // Chave gerenciada com segurança no navegador (não vai para o GitHub)
         let GROQ_API_KEY = localStorage.getItem('codecraft_groq_key') || "";
 
         const chatBox = document.getElementById("chat-box");
@@ -344,7 +343,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
                         "Authorization": `Bearer ${GROQ_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "llama-3.1-8b-instant",
+                        model: "llama-3.3-70b-versatile",
                         messages: mensagensGroq,
                         temperature: 0.7,
                         max_tokens: 8192
