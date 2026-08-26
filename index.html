@@ -18,7 +18,7 @@
         .user-message { background: #1f6feb; color: white; align-self: flex-end; }
         .ai-message { background: #21262d; color: #c9d1d9; align-self: flex-start; border: 1px solid #30363d; }
 
-        /* Barra de fala otimizada para pular linha livremente */
+        /* Barra de fala com suporte total a pular linha */
         .input-area { background: #161b22; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #30363d; align-items: flex-end; }
         textarea { flex: 1; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; resize: none; max-height: 120px; font-family: inherit; line-height: 1.4; }
         textarea::placeholder { color: #8b949e; }
@@ -67,7 +67,6 @@
     <div id="chat-box"></div>
 
     <div class="input-area">
-        <!-- Textarea puro sem bloquear o Enter para pular linha -->
         <textarea id="user-input" placeholder="Digite seu código ou dúvida... (pule linhas livremente)" rows="1" oninput="ajustarAltura(this)"></textarea>
         <button class="send-btn" onclick="enviarMensagem()">Enviar</button>
     </div>
@@ -266,11 +265,12 @@ MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}`;
             });
 
             try {
-                const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent?key=${API_KEY}`, {
+                // Alterado para gemini-1.5-flash que possui cota livre generativa alta (sem o limite de 20 requisições)
+                const resposta = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        systemInstruction: { parts: [{ text: atualizarRegras() }] },
+                        system_instruction: { parts: [{ text: atualizarRegras() }] },
                         contents: historicoFormatado,
                         generationConfig: {
                             maxOutputTokens: 8192,
@@ -291,7 +291,7 @@ MEMÓRIA GLOBAL DE CONVERSAS ANTERIORES: ${globalMemory}`;
                     await renderizarComEfeitoDigitacao(textoIA);
 
                 } else if (dados.error) {
-                    renderizarMensagemNaTelaInstantanea("❌ Erro do Google (Limite atingido): " + dados.error.message, "ai-message");
+                    renderizarMensagemNaTelaInstantanea("❌ Erro da API: " + dados.error.message, "ai-message");
                 } else {
                     renderizarMensagemNaTelaInstantanea("❌ Erro desconhecido: " + JSON.stringify(dados), "ai-message");
                 }
