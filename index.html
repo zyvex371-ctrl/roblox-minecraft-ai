@@ -64,9 +64,10 @@
     <header>
         <button class="menu-btn" onclick="abrirMenu()">☰</button>
         <h1>CodeCraft AI</h1>
-        <div style="display: flex; gap: 5px;">
-            <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 18px;">🔑</button>
-            <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 18px;">🧠</button>
+        <div style="display: flex; gap: 4px;">
+            <button class="menu-btn" onclick="configurarModelo()" title="Configurar Modelo Groq" style="font-size: 16px;">🤖</button>
+            <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 16px;">🔑</button>
+            <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 16px;">🧠</button>
         </div>
     </header>
 
@@ -79,6 +80,7 @@
 
     <script>
         let GROQ_API_KEY = localStorage.getItem('codecraft_groq_key') || "";
+        let GROQ_MODEL = localStorage.getItem('codecraft_groq_model') || "llama-3.1-8b-instant";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -142,6 +144,16 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
             }
         }
 
+        function configurarModelo() {
+            fecharMenu();
+            const novoMod = prompt("🤖 Digite o nome do modelo da Groq (ex: llama-3.1-8b-instant):", GROQ_MODEL);
+            if (novoMod !== null && novoMod.trim() !== "") {
+                GROQ_MODEL = novoMod.trim();
+                localStorage.setItem('codecraft_groq_model', GROQ_MODEL);
+                alert("✅ Modelo atualizado para: " + GROQ_MODEL);
+            }
+        }
+
         function ajustarAltura(el) {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
@@ -166,7 +178,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
             if (chatBox) {
                 chatBox.innerHTML = `
                     <div class="message ai-message">
-                        Salve, Heitor! CodeCraft pronto. Manda o exploit para o Delta!
+                        Salve, Heitor! CodeCraft V4 Ativo. Manda o exploit para o Delta!
                     </div>
                 `;
             }
@@ -343,7 +355,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
                         "Authorization": `Bearer ${GROQ_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "llama-3.1-8b-instant",
+                        model: GROQ_MODEL,
                         messages: mensagensGroq,
                         temperature: 0.7,
                         max_tokens: 8192
@@ -362,7 +374,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
                     renderizarMensagem(textoIA, "ai-message");
 
                 } else if (dados.error) {
-                    renderizarMensagem("❌ Erro da Groq: " + dados.error.message, "error-message");
+                    renderizarMensagem("❌ Erro da Groq (" + GROQ_MODEL + "): " + dados.error.message, "error-message");
                 } else {
                     renderizarMensagem("❌ Erro inesperado na resposta.", "error-message");
                 }
