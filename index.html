@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeCraft AI - Claude Edition</title>
+    <title>CodeCraft AI - Gemini Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -61,7 +61,7 @@
 
     <header>
         <button class="menu-btn" onclick="abrirMenu()">☰</button>
-        <h1>CodeCraft AI (Claude)</h1>
+        <h1>CodeCraft AI (Gemini)</h1>
         <div style="display: flex; gap: 4px;">
             <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 16px;">🔑</button>
             <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 16px;">🧠</button>
@@ -76,8 +76,9 @@
     </div>
 
     <script>
-        // Chave segura salva apenas no celular do usuário
-        let CLAUDE_API_KEY = localStorage.getItem('codecraft_claude_key') || "";
+        let GEMINI_API_KEY = localStorage.getItem('codecraft_gemini_key') || "";
+        // Usando o modelo flash oficial de alta velocidade e gratuito do Google
+        const GEMINI_MODEL = "gemini-2.5-flash";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -85,7 +86,7 @@
         let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
         const obterSystemPrompt = () => {
-            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e engenharia reversa para exploits mobile. Crie códigos limpos e funcionais. Extras: ${customMemory}`;
+            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e engenharia reversa para exploits mobile (Delta). Crie códigos limpos e funcionais. Extras: ${customMemory}`;
         };
 
         let sessoes = [];
@@ -113,26 +114,26 @@
         };
 
         function verificarChaveInicial() {
-            if (!CLAUDE_API_KEY || !CLAUDE_API_KEY.startsWith("sk-ant-")) {
-                const nova = prompt("🔑 Insira sua chave da Anthropic (começa com sk-ant-):");
-                if (nova && nova.trim().startsWith("sk-ant-")) {
-                    CLAUDE_API_KEY = nova.trim();
-                    localStorage.setItem('codecraft_claude_key', CLAUDE_API_KEY);
-                    alert("✅ Chave salva com sucesso no seu navegador!");
+            if (!GEMINI_API_KEY) {
+                const nova = prompt("🔑 Insira sua chave da API do Google AI Studio (Gemini):");
+                if (nova && nova.trim() !== "") {
+                    GEMINI_API_KEY = nova.trim();
+                    localStorage.setItem('codecraft_gemini_key', GEMINI_API_KEY);
+                    alert("✅ Chave do Gemini salva com sucesso!");
                 } else {
-                    alert("⚠️ Você precisa inserir uma chave válida do Claude para a IA responder.");
+                    alert("⚠️ Você precisa inserir uma chave válida do Gemini para a IA responder.");
                 }
             }
         }
 
         function configurarChave() {
             fecharMenu();
-            const atual = CLAUDE_API_KEY || "";
-            const nova = prompt("🔑 Digite ou cole sua nova chave da Anthropic (sk-ant-...):", atual);
+            const atual = GEMINI_API_KEY || "";
+            const nova = prompt("🔑 Digite ou cole sua nova chave do Google AI Studio:", atual);
             if (nova !== null && nova.trim() !== "") {
-                CLAUDE_API_KEY = nova.trim();
-                localStorage.setItem('codecraft_claude_key', CLAUDE_API_KEY);
-                alert("✅ Chave do Claude atualizada com sucesso!");
+                GEMINI_API_KEY = nova.trim();
+                localStorage.setItem('codecraft_gemini_key', GEMINI_API_KEY);
+                alert("✅ Chave do Gemini atualizada com sucesso!");
             }
         }
 
@@ -160,7 +161,7 @@
             if (chatBox) {
                 chatBox.innerHTML = `
                     <div class="message ai-message">
-                        Salve, Heitor! CodeCraft com Claude 3.5 Sonnet ativo. Manda a braba para o Delta!
+                        Salve, Heitor! CodeCraft com Gemini 2.5 Flash ativo. Manda a braba para o Delta!
                     </div>
                 `;
             }
@@ -283,8 +284,8 @@
         }
 
         async function enviarMensagem() {
-            if (!CLAUDE_API_KEY || !CLAUDE_API_KEY.startsWith("sk-ant-")) {
-                alert("⚠️ Insira uma chave da Anthropic válida clicando no ícone de chave (🔑).");
+            if (!GEMINI_API_KEY) {
+                alert("⚠️ Insira uma chave do Gemini válida clicando no ícone de chave (🔑).");
                 configurarChave();
                 return;
             }
@@ -312,49 +313,53 @@
             const loadDiv = document.createElement("div");
             loadDiv.className = "message ai-message";
             loadDiv.id = loadingId;
-            loadDiv.innerText = "Claude pensando...";
+            loadDiv.innerText = "Gemini pensando...";
             chatBox.appendChild(loadDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            let mensagensClaude = [];
-            const historicoRecente = sessao.mensagens.slice(-8);
+            // Formato de histórico compatível com a API v1beta do Gemini
+            let contentsArray = [];
+            
+            // Adiciona instrução de sistema como parte inicial do contexto para o Gemini
+            contentsArray.push({
+                role: "user",
+                parts: [{ text: "INSTRUÇÃO DO SISTEMA: " + obterSystemPrompt() }]
+            });
+            contentsArray.push({
+                role: "model",
+                parts: [{ text: "Entendido. Pronto para executar." }]
+            });
+
+            const historicoRecente = sessao.mensagens.slice(-10);
             historicoRecente.forEach(m => {
-                mensagensClaude.push({
-                    role: m.classe === "user-message" ? "user" : "assistant",
-                    content: m.texto
+                contentsArray.push({
+                    role: m.classe === "user-message" ? "user" : "model",
+                    parts: [{ text: m.texto }]
                 });
             });
 
             try {
-                const resposta = await fetch("https://api.anthropic.com/v1/messages", {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+                
+                const resposta = await fetch(url, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-api-key": CLAUDE_API_KEY,
-                        "anthropic-version": "2023-06-01",
-                        "anthropic-dangerous-direct-browser-access": "true"
-                    },
-                    body: JSON.stringify({
-                        model: "claude-3-5-sonnet-20241022",
-                        system: obterSystemPrompt(),
-                        messages: mensagensClaude,
-                        max_tokens: 4000
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: contentsArray })
                 });
 
                 const dados = await resposta.json();
                 const loadEl = document.getElementById(loadingId);
                 if (loadEl) loadEl.remove();
 
-                if (dados.content && dados.content.length > 0) {
-                    const textoIA = dados.content[0].text;
+                if (dados.candidates && dados.candidates.length > 0) {
+                    const textoIA = dados.candidates[0].content.parts[0].text;
                     sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
                     salvarDados();
                     
                     renderizarMensagem(textoIA, "ai-message");
 
                 } else if (dados.error) {
-                    renderizarMensagem("❌ Erro do Claude: " + dados.error.message, "error-message");
+                    renderizarMensagem("❌ Erro do Gemini: " + dados.error.message, "error-message");
                 } else {
                     renderizarMensagem("❌ Erro inesperado na resposta.", "error-message");
                 }
@@ -362,7 +367,7 @@
             } catch (erro) {
                 const loadEl = document.getElementById(loadingId);
                 if (loadEl) loadEl.remove();
-                renderizarMensagem("❌ Erro de conexão com a API do Claude.", "error-message");
+                renderizarMensagem("❌ Erro de conexão com a API do Gemini.", "error-message");
             }
         }
 
@@ -371,7 +376,7 @@
             div.className = `message ${classe}`;
             
             if (classe === "ai-message" && !texto.startsWith("❌") && !texto.startsWith("⚠️") && typeof marked !== "undefined") {
-                div.innerHTML = marked.parse(textotexto = texto);
+                div.innerHTML = marked.parse(texto);
                 adicionarBotoesCopiar(div);
             } else {
                 div.innerHTML = texto.replace(/\n/g, '<br>'); 
