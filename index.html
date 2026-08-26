@@ -75,8 +75,8 @@
     </div>
 
     <script>
-        // Chave da Groq integrada com sucesso
-        const GROQ_API_KEY = "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";
+        // Chave nova da Groq integrada com segurança
+        const GROQ_API_KEY = "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";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -139,7 +139,7 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
             if (chatBox) {
                 chatBox.innerHTML = `
                     <div class="message ai-message">
-                        Salve, Heitor! CodeCraft rodando na Groq com velocidade máxima. Manda o exploit para o Delta!
+                        Salve, Heitor! CodeCraft rodando na Groq com chave nova. Manda o exploit para o Delta!
                     </div>
                 `;
             }
@@ -292,7 +292,6 @@ INSTRUÇÕES EXTRAS DO DONO: ${customMemory}`;
             chatBox.appendChild(loadDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Formato de mensagens aceito pela Groq (OpenAI-compatible)
             let mensagensGroq = [
                 { role: "system", content: obterSystemPrompt() }
             ];
