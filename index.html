@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeCraft AI - Groq Edition</title>
+    <title>CodeCraft AI - Claude Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,7 +19,6 @@
         .ai-message { background: #21262d; color: #c9d1d9; align-self: flex-start; border: 1px solid #30363d; }
         .error-message { background: #4e1515; color: #ff7b72; align-self: center; border: 1px solid #881f1f; text-align: center; }
 
-        /* Barra de fala com suporte total a pular linha */
         .input-area { background: #161b22; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #30363d; align-items: flex-end; }
         textarea { flex: 1; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; resize: none; max-height: 120px; font-family: inherit; line-height: 1.4; }
         textarea::placeholder { color: #8b949e; }
@@ -30,7 +29,6 @@
         code { font-family: monospace; font-size: 13px; color: #79c0ff; }
         .copy-btn { position: absolute; top: 5px; right: 5px; background: #30363d; color: white; border: none; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
 
-        /* Sidebar e Menu Lateral */
         .sidebar { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: #161b22; transition: 0.3s; z-index: 100; border-right: 1px solid #30363d; display: flex; flex-direction: column; }
         .sidebar.open { left: 0; }
         .sidebar-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
@@ -63,7 +61,7 @@
 
     <header>
         <button class="menu-btn" onclick="abrirMenu()">☰</button>
-        <h1>CodeCraft AI</h1>
+        <h1>CodeCraft AI (Claude)</h1>
         <div style="display: flex; gap: 4px;">
             <button class="menu-btn" onclick="configurarChave()" title="Configurar Chave API" style="font-size: 16px;">🔑</button>
             <button class="menu-btn" onclick="configurarCerebro()" title="Configurar Cérebro" style="font-size: 16px;">🧠</button>
@@ -78,8 +76,8 @@
     </div>
 
     <script>
-        let GROQ_API_KEY = localStorage.getItem('codecraft_groq_key') || "";
-        const GROQ_MODEL = "llama-3.1-8b-instant";
+        // Chave segura salva apenas no celular do usuário
+        let CLAUDE_API_KEY = localStorage.getItem('codecraft_claude_key') || "";
 
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -87,7 +85,7 @@
         let customMemory = localStorage.getItem('codecraft_custom_memory') || "Nenhuma instrução personalizada definida.";
 
         const obterSystemPrompt = () => {
-            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e exploits para o Delta mobile. Crie códigos completos e funcionais. Extras: ${customMemory}`;
+            return `Você é o CodeCraft AI, especialista sênior em Luau, Roblox Studio e engenharia reversa para exploits mobile. Crie códigos limpos e funcionais. Extras: ${customMemory}`;
         };
 
         let sessoes = [];
@@ -115,26 +113,26 @@
         };
 
         function verificarChaveInicial() {
-            if (!GROQ_API_KEY || !GROQ_API_KEY.startsWith("gsk_")) {
-                const nova = prompt("🔑 Insira sua chave da Groq (começa com gsk_):");
-                if (nova && nova.trim().startsWith("gsk_")) {
-                    GROQ_API_KEY = nova.trim();
-                    localStorage.setItem('codecraft_groq_key', GROQ_API_KEY);
-                    alert("✅ Chave salva com sucesso!");
+            if (!CLAUDE_API_KEY || !CLAUDE_API_KEY.startsWith("sk-ant-")) {
+                const nova = prompt("🔑 Insira sua chave da Anthropic (começa com sk-ant-):");
+                if (nova && nova.trim().startsWith("sk-ant-")) {
+                    CLAUDE_API_KEY = nova.trim();
+                    localStorage.setItem('codecraft_claude_key', CLAUDE_API_KEY);
+                    alert("✅ Chave salva com sucesso no seu navegador!");
                 } else {
-                    alert("⚠️ Você precisa inserir uma chave válida da Groq para a IA responder.");
+                    alert("⚠️ Você precisa inserir uma chave válida do Claude para a IA responder.");
                 }
             }
         }
 
         function configurarChave() {
             fecharMenu();
-            const atual = GROQ_API_KEY || "";
-            const nova = prompt("🔑 Digite ou cole sua nova chave da Groq (gsk_...):", atual);
-            if (nova !== null) {
-                GROQ_API_KEY = nova.trim();
-                localStorage.setItem('codecraft_groq_key', GROQ_API_KEY);
-                alert("✅ Chave da Groq atualizada com sucesso!");
+            const atual = CLAUDE_API_KEY || "";
+            const nova = prompt("🔑 Digite ou cole sua nova chave da Anthropic (sk-ant-...):", atual);
+            if (nova !== null && nova.trim() !== "") {
+                CLAUDE_API_KEY = nova.trim();
+                localStorage.setItem('codecraft_claude_key', CLAUDE_API_KEY);
+                alert("✅ Chave do Claude atualizada com sucesso!");
             }
         }
 
@@ -162,7 +160,7 @@
             if (chatBox) {
                 chatBox.innerHTML = `
                     <div class="message ai-message">
-                        Salve, Heitor! CodeCraft na Groq (Llama 3.1) pronto. Manda o exploit!
+                        Salve, Heitor! CodeCraft com Claude 3.5 Sonnet ativo. Manda a braba para o Delta!
                     </div>
                 `;
             }
@@ -197,10 +195,9 @@
 
         function apagarChat(event, id) {
             event.stopPropagation();
-            if (!confirm("Tem certeza que deseja apagar este chat? A IA vai esquecer tudo dele.")) return;
+            if (!confirm("Tem certeza que deseja apagar este chat?")) return;
 
             sessoes = sessoes.filter(s => s.id !== id);
-            
             if (sessoes.length === 0) {
                 novoChat();
             } else {
@@ -241,13 +238,11 @@
                 const btnRenomear = document.createElement('button');
                 btnRenomear.className = 'rename-btn';
                 btnRenomear.innerHTML = '✏️';
-                btnRenomear.title = 'Renomear chat';
                 btnRenomear.onclick = (e) => renomearChat(e, sessao.id);
 
                 const btnApagar = document.createElement('button');
                 btnApagar.className = 'rename-btn';
                 btnApagar.innerHTML = '🗑️';
-                btnApagar.title = 'Apagar chat';
                 btnApagar.onclick = (e) => apagarChat(e, sessao.id);
 
                 btnContainer.appendChild(btnRenomear);
@@ -288,8 +283,8 @@
         }
 
         async function enviarMensagem() {
-            if (!GROQ_API_KEY || !GROQ_API_KEY.startsWith("gsk_")) {
-                alert("⚠️ Insira uma chave da Groq válida clicando no ícone de chave (🔑) lá em cima.");
+            if (!CLAUDE_API_KEY || !CLAUDE_API_KEY.startsWith("sk-ant-")) {
+                alert("⚠️ Insira uma chave da Anthropic válida clicando no ícone de chave (🔑).");
                 configurarChave();
                 return;
             }
@@ -317,34 +312,33 @@
             const loadDiv = document.createElement("div");
             loadDiv.className = "message ai-message";
             loadDiv.id = loadingId;
-            loadDiv.innerText = "Pensando...";
+            loadDiv.innerText = "Claude pensando...";
             chatBox.appendChild(loadDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            let mensagensGroq = [
-                { role: "system", content: obterSystemPrompt() }
-            ];
-            
-            const historicoRecente = sessao.mensagens.slice(-6);
+            let mensagensClaude = [];
+            const historicoRecente = sessao.mensagens.slice(-8);
             historicoRecente.forEach(m => {
-                mensagensGroq.push({
+                mensagensClaude.push({
                     role: m.classe === "user-message" ? "user" : "assistant",
                     content: m.texto
                 });
             });
 
             try {
-                const resposta = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                const resposta = await fetch("https://api.anthropic.com/v1/messages", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${GROQ_API_KEY}`
+                        "x-api-key": CLAUDE_API_KEY,
+                        "anthropic-version": "2023-06-01",
+                        "anthropic-dangerous-direct-browser-access": "true"
                     },
                     body: JSON.stringify({
-                        model: GROQ_MODEL,
-                        messages: mensagensGroq,
-                        temperature: 0.7,
-                        max_tokens: 2048
+                        model: "claude-3-5-sonnet-20241022",
+                        system: obterSystemPrompt(),
+                        messages: mensagensClaude,
+                        max_tokens: 4000
                     })
                 });
 
@@ -352,15 +346,15 @@
                 const loadEl = document.getElementById(loadingId);
                 if (loadEl) loadEl.remove();
 
-                if (dados.choices && dados.choices.length > 0) {
-                    const textoIA = dados.choices[0].message.content;
+                if (dados.content && dados.content.length > 0) {
+                    const textoIA = dados.content[0].text;
                     sessao.mensagens.push({ texto: textoIA, classe: "ai-message" });
                     salvarDados();
                     
                     renderizarMensagem(textoIA, "ai-message");
 
                 } else if (dados.error) {
-                    renderizarMensagem("❌ Erro da Groq: " + dados.error.message, "error-message");
+                    renderizarMensagem("❌ Erro do Claude: " + dados.error.message, "error-message");
                 } else {
                     renderizarMensagem("❌ Erro inesperado na resposta.", "error-message");
                 }
@@ -368,7 +362,7 @@
             } catch (erro) {
                 const loadEl = document.getElementById(loadingId);
                 if (loadEl) loadEl.remove();
-                renderizarMensagem("❌ Erro de conexão com a internet.", "error-message");
+                renderizarMensagem("❌ Erro de conexão com a API do Claude.", "error-message");
             }
         }
 
@@ -377,7 +371,7 @@
             div.className = `message ${classe}`;
             
             if (classe === "ai-message" && !texto.startsWith("❌") && !texto.startsWith("⚠️") && typeof marked !== "undefined") {
-                div.innerHTML = marked.parse(texto);
+                div.innerHTML = marked.parse(textotexto = texto);
                 adicionarBotoesCopiar(div);
             } else {
                 div.innerHTML = texto.replace(/\n/g, '<br>'); 
